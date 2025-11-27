@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TSLL 戰術儀表板 (Auto)</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-sub: #a0a0a0;
+            --accent: #2962ff;
+            --success: #00c853;
+            --danger: #ff3d00;
+            --warning: #ffab00;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container { max-width: 600px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 20px; color: var(--text-main); }
+        
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: var(--text-sub); font-size: 0.9rem; }
+        input {
+            width: 100%; padding: 10px; background: #2c2c2c;
+            border: 1px solid #444; border-radius: 8px; color: white;
+            font-size: 1rem; box-sizing: border-box;
+        }
+        
+        .btn-group { display: flex; gap: 10px; }
+        button {
+            flex: 1; padding: 12px; border: none; border-radius: 8px;
+            font-size: 1rem; cursor: pointer; font-weight: bold;
+            color: white; transition: opacity 0.2s;
+        }
+        .btn-fetch { background-color: #6200ea; } /* Purple for API */
+        .btn-calc { background-color: var(--accent); }
+        button:hover { opacity: 0.9; }
+        button:disabled { background-color: #555; cursor: not-allowed; }
+
+        .status-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;
+        }
+        .status-item {
+            background: #252525; padding: 15px; border-radius: 10px; text-align: center;
+        }
+        .status-label { font-size: 0.8rem; color: var(--text-sub); display: block; }
+        .status-value { font-size: 1.4rem; font-weight: bold; display: block; }
+        .val-green { color: var(--success); }
+        .val-red { color: var(--danger); }
+        
+        .action-banner {
+            padding: 15px; border-radius: 8px; text-align: center;
+            font-weight: bold; font-size: 1.2rem; margin-top: 10px; display: none;
+        }
+        .action-safe { background: rgba(0, 200, 83, 0.2); color: var(--success); border: 1px solid var(--success); }
+        .action-danger { background: rgba(255, 61, 0, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+        .action-warning { background: rgba(255, 171, 0, 0.2); color: var(--warning); border: 1px solid var(--warning); }
+
+        .logic-text {
+            margin-top:15px; font-size:0.9rem; color:#aaa; padding: 10px; 
+            background: #252525; border-radius: 8px; word-break: break-all;
+        }
+        
+        /* Loading Spinner */
+        .loader { border: 3px solid #333; border-top: 3px solid #fff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 10px;}
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>⚡ TSLL 戰術儀表板 (Auto)</h1>
+
+    <div class="card">
+        <div class="input-group">
+            <label>買進成本 (Cost)</label>
+            <input type="number" id="costPrice" placeholder="例如: 100.0" step="0.01">
+        </div>
+        <div class="input-group">
+            <label>買進日期 (Entry Date)</label>
+            <input type="date" id="entryDate">
+        </div>
+        
+        <!-- Auto Fetch Button -->
+        <div class="input-group">
+            <button onclick="fetchData()" class="btn-fetch" id="fetchBtn">
+                📡 自動抓取股價 (Yahoo API)
+            </button>
+            <div id="fetchMsg" style="font-size:0.8rem; color:#888; margin-top:5px; text-align:center;"></div>
+        </div>
+
+        <div class="input-group">
+            <label>波段最高價 (可手動修正)</label>
+            <input type="number" id="highPrice" placeholder="等待抓取..." step="0.01">
+        </div>
+        <div class="input-group">
+            <label>目前現價 (可手動修正)</label>
+            <input type="number" id="currentPrice" placeholder="等待抓取..." step="0.01">
+        </div>
+        
+        <button onclick="calculateStrategy()" class="btn-calc">診斷狀態</button>
+    </div>
+
+    <div id="resultCard" class="card" style="display:none;">
+        <div class="status-grid">
+            <div class="status-item">
+                <span class="status-label">目前損益</span>
+                <span id="pnlDisplay" class="status-value">--%</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">持有天數</span>
+                <span id="daysDisplay" class="status-value">-- 天</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">移動停利點</span>
+                <span id="stopPriceDisplay" class="status-value">--</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">安全距離</span>
+                <span id="riskDisplay" class="status-value">--%</span>
+            </div>
+        </div>
+
+        <div id="actionBox" class="action-banner"></div>
+        <div id="logicExplain" class="logic-text"></div>
+    </div>
+</div>
+
+<script>
+    // Default date to today
+    document.getElementById('entryDate').valueAsDate = new Date();
+
+    // Fetch Data from Yahoo Finance via CORS Proxy
+    async function fetchData() {
+        const entryDateVal = document.getElementById('entryDate').value;
+        if (!entryDateVal) { alert("請先選擇買進日期，才能計算區間最高價"); return; }
+
+        const btn = document.getElementById('fetchBtn');
+        const msg = document.getElementById('fetchMsg');
+        const entryTs = new Date(entryDateVal).getTime() / 1000;
+
+        btn.disabled = true;
+        btn.innerHTML = '<div class="loader"></div> 抓取中...';
+        msg.innerText = "正在連線至 Yahoo Finance (透過 CORS Proxy)...";
+        msg.style.color = "#888";
+
+        try {
+            // Use corsproxy.io to bypass CORS restriction
+            // Fetch 3 months of data to cover the range
+            const proxyUrl = "https://corsproxy.io/?";
+            const targetUrl = "https://query1.finance.yahoo.com/v8/finance/chart/TSLL?range=3mo&interval=1d";
+            
+            const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+            if (!response.ok) throw new Error("網路連線失敗");
+            
+            const data = await response.json();
+            const result = data.chart.result[0];
+            
+            // 1. Get Current Price
+            const currentPrice = result.meta.regularMarketPrice;
+            
+            // 2. Calculate Max High since Entry Date
+            const timestamps = result.timestamp;
+            const highs = result.indicators.quote[0].high;
+            let maxHigh = 0;
+            
+            // Loop through data to find max high after entry date
+            for (let i = 0; i < timestamps.length; i++) {
+                if (timestamps[i] >= entryTs) {
+                    if (highs[i] > maxHigh) maxHigh = highs[i];
+                }
+            }
+            
+            // Fallback: if entry date is today, maxHigh might be current high
+            if (maxHigh === 0) maxHigh = result.meta.regularMarketDayHigh;
+
+            // Update UI
+            document.getElementById('currentPrice').value = currentPrice.toFixed(2);
+            document.getElementById('highPrice').value = maxHigh.toFixed(2);
+            
+            msg.innerText = `✅ 抓取成功! 資料時間: ${new Date().toLocaleTimeString()}`;
+            msg.style.color = "var(--success)";
+            
+            // Auto calculate
+            calculateStrategy();
+
+        } catch (error) {
+            console.error(error);
+            msg.innerText = "❌ 抓取失敗 (可能是 Proxy 忙線中)，請手動輸入數值。";
+            msg.style.color = "var(--danger)";
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "📡 自動抓取股價 (Yahoo API)";
+        }
+    }
+
+    function calculateStrategy() {
+        const cost = parseFloat(document.getElementById('costPrice').value);
+        const entryDateVal = document.getElementById('entryDate').value;
+        const high = parseFloat(document.getElementById('highPrice').value);
+        const current = parseFloat(document.getElementById('currentPrice').value);
+
+        if (isNaN(cost) || !entryDateVal || isNaN(high) || isNaN(current)) {
+            alert("數值不完整"); return;
+        }
+
+        // Basic Calcs
+        const entryDate = new Date(entryDateVal);
+        const today = new Date();
+        const daysHeld = Math.floor((today - entryDate) / (1000 * 3600 * 24)); 
+        const pnlPct = (current - cost) / cost;
+        
+        // Strategy Logic
+        const stopBreakeven = cost * 1.02;
+        const stopTrailing = high * 0.90;
+        
+        let activeStopPrice = 0;
+        let stopReason = "";
+
+        if (high > stopBreakeven) {
+             activeStopPrice = Math.max(stopBreakeven, stopTrailing);
+             stopReason = (activeStopPrice === stopBreakeven) ? "保本 (+2%)" : "移動停利 (-10%)";
+        } else {
+            activeStopPrice = cost * 0.95;
+            stopReason = "初始停損 (-5%)";
+        }
+
+        // UI Updates
+        document.getElementById('resultCard').style.display = 'block';
+        const pnlEl = document.getElementById('pnlDisplay');
+        pnlEl.innerText = (pnlPct * 100).toFixed(2) + "%";
+        pnlEl.className = "status-value " + (pnlPct >= 0 ? "val-green" : "val-red");
+        
+        document.getElementById('daysDisplay').innerText = daysHeld + " 天";
+        document.getElementById('stopPriceDisplay').innerText = activeStopPrice.toFixed(2);
+        
+        const distToStop = (current - activeStopPrice) / current;
+        const riskEl = document.getElementById('riskDisplay');
+        riskEl.innerText = (distToStop * 100).toFixed(2) + "%";
+        if (distToStop < 0) riskEl.style.color = "var(--danger)";
+        else if (distToStop < 0.02) riskEl.style.color = "var(--warning)";
+        else riskEl.style.color = "#aaa";
+
+        // Action Logic
+        const actionBox = document.getElementById('actionBox');
+        const logicText = document.getElementById('logicExplain');
+        let actionClass = "", actionMsg = "", logicMsg = "";
+
+        if (current < activeStopPrice) {
+            actionClass = "action-danger";
+            actionMsg = "🚨 觸發停損：立即賣出";
+            logicMsg = `現價 ${current} 跌破 ${stopReason} ${activeStopPrice.toFixed(2)}`;
+        } else if (daysHeld >= 3 && pnlPct < 0.03 && pnlPct > -0.05) {
+            actionClass = "action-warning";
+            actionMsg = "⚠️ 動能不足：建議離場";
+            logicMsg = "持有 3 天漲幅未達 3%，效率過低。";
+        } else if (daysHeld >= 10) {
+            actionClass = "action-danger";
+            actionMsg = "🛑 期限已到：強制出場";
+            logicMsg = "持有已達 10 天上限。";
+        } else if (pnlPct >= 0.10) {
+            actionClass = "action-warning";
+            actionMsg = "💰 獲利達標：賣出一半";
+            logicMsg = "獲利 > 10%，建議減碼鎖利。";
+        } else {
+            actionClass = "action-safe";
+            actionMsg = "✅ 狀態良好：續抱";
+            logicMsg = `位於安全區間。停損價: ${activeStopPrice.toFixed(2)}`;
+        }
+
+        actionBox.className = "action-banner " + actionClass;
+        actionBox.innerText = actionMsg;
+        actionBox.style.display = 'block';
+        logicText.innerText = logicMsg;
+    }
+</script>
+
+</body>
+</html>
