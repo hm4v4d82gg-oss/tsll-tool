@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TSLL 戰術儀表板</title>
+    <title>槓桿 ETF 戰術儀表板 V2</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -24,7 +24,7 @@
             line-height: 1.6;
         }
         .container { max-width: 600px; margin: 0 auto; }
-        h1 { text-align: center; margin-bottom: 20px; color: var(--text-main); }
+        h1 { text-align: center; margin-bottom: 20px; color: var(--text-main); font-size: 1.5rem; }
         
         .card {
             background-color: var(--card-bg);
@@ -34,35 +34,47 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         
+        /* Grid Layout for Inputs */
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
         .input-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: var(--text-sub); font-size: 0.9rem; }
+        label { display: block; margin-bottom: 5px; color: var(--text-sub); font-size: 0.85rem; }
         input {
-            width: 100%; padding: 10px; background: #2c2c2c;
+            width: 100%; padding: 12px; background: #2c2c2c;
             border: 1px solid #444; border-radius: 8px; color: white;
             font-size: 1rem; box-sizing: border-box;
         }
+        input:focus { border-color: var(--accent); outline: none; }
         
+        /* Buttons */
         button {
-            width: 100%; padding: 12px; border: none; border-radius: 8px;
+            width: 100%; padding: 14px; border: none; border-radius: 8px;
             font-size: 1rem; cursor: pointer; font-weight: bold;
             color: white; transition: opacity 0.2s; margin-top: 5px;
         }
         .btn-fetch { background-color: #6200ea; margin-bottom: 15px; } 
         .btn-calc { background-color: var(--accent); }
         button:hover { opacity: 0.9; }
-        button:disabled { background-color: #555; cursor: not-allowed; }
+        button:disabled { background-color: #444; cursor: not-allowed; color: #888; }
 
+        /* Status Grid */
         .status-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;
         }
         .status-item {
-            background: #252525; padding: 15px; border-radius: 10px; text-align: center;
+            background: #252525; padding: 12px; border-radius: 10px; text-align: center;
         }
-        .status-label { font-size: 0.8rem; color: var(--text-sub); display: block; }
-        .status-value { font-size: 1.4rem; font-weight: bold; display: block; }
+        .status-label { font-size: 0.75rem; color: var(--text-sub); display: block; }
+        .status-value { font-size: 1.3rem; font-weight: bold; display: block; margin-top: 4px; }
         .val-green { color: var(--success); }
         .val-red { color: var(--danger); }
         
+        /* Action Banner */
         .action-banner {
             padding: 15px; border-radius: 8px; text-align: center;
             font-weight: bold; font-size: 1.2rem; margin-top: 10px; display: none;
@@ -72,44 +84,62 @@
         .action-warning { background: rgba(255, 171, 0, 0.2); color: var(--warning); border: 1px solid var(--warning); }
 
         .logic-text {
-            margin-top:15px; font-size:0.9rem; color:#aaa; padding: 10px; 
+            margin-top:15px; font-size:0.9rem; color:#aaa; padding: 12px; 
             background: #252525; border-radius: 8px; word-break: break-all;
         }
         
-        .loader { border: 3px solid #333; border-top: 3px solid #fff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 10px;}
+        .loader { border: 3px solid #333; border-top: 3px solid #fff; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px;}
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>⚡ TSLL 戰術儀表板</h1>
+    <h1>🚀 槓桿戰術儀表板 V2</h1>
 
     <div class="card">
-        <div class="input-group">
-            <label>買進成本 (Cost)</label>
-            <input type="number" id="costPrice" placeholder="例如: 100.0" step="0.01">
+        <!-- 第一排：代碼與日期 -->
+        <div class="input-row">
+            <div class="input-group">
+                <label>標的代碼 (Ticker)</label>
+                <input type="text" id="tickerSymbol" value="TSLL" style="text-transform:uppercase; font-weight:bold; letter-spacing:1px;">
+            </div>
+            <div class="input-group">
+                <label>買進日期 (Date)</label>
+                <input type="date" id="entryDate">
+            </div>
         </div>
-        <div class="input-group">
-            <label>買進日期 (Entry Date)</label>
-            <input type="date" id="entryDate">
+
+        <!-- 第二排：成本與股數 -->
+        <div class="input-row">
+            <div class="input-group">
+                <label>買進成本 (Cost)</label>
+                <input type="number" id="costPrice" placeholder="例如: 100.0" step="0.01">
+            </div>
+            <div class="input-group">
+                <label>持有股數 (Shares)</label>
+                <input type="number" id="sharesCount" placeholder="例如: 200">
+            </div>
         </div>
         
         <button onclick="fetchData()" class="btn-fetch" id="fetchBtn">
-            📡 自動抓取股價 (Yahoo API)
+            📡 自動抓取現價 (Yahoo API)
         </button>
         <div id="fetchMsg" style="font-size:0.8rem; color:#888; margin-bottom:15px; text-align:center;"></div>
 
-        <div class="input-group">
-            <label>波段最高價 (可手動修正)</label>
-            <input type="number" id="highPrice" placeholder="等待抓取..." step="0.01">
-        </div>
-        <div class="input-group">
-            <label>目前現價 (可手動修正)</label>
-            <input type="number" id="currentPrice" placeholder="等待抓取..." step="0.01">
+        <!-- 第三排：抓取結果 -->
+        <div class="input-row">
+            <div class="input-group">
+                <label>區間最高價 (Max High)</label>
+                <input type="number" id="highPrice" placeholder="系統自動填入" step="0.01">
+            </div>
+            <div class="input-group">
+                <label>目前現價 (Current)</label>
+                <input type="number" id="currentPrice" placeholder="系統自動填入" step="0.01">
+            </div>
         </div>
         
-        <button onclick="calculateStrategy()" class="btn-calc">診斷狀態</button>
+        <button onclick="calculateStrategy()" class="btn-calc">開始診斷</button>
     </div>
 
     <div id="resultCard" class="card" style="display:none;">
@@ -119,12 +149,12 @@
                 <span id="pnlDisplay" class="status-value">--%</span>
             </div>
             <div class="status-item">
-                <span class="status-label">持有天數</span>
-                <span id="daysDisplay" class="status-value">-- 天</span>
+                <span class="status-label">帳面金額變動</span>
+                <span id="pnlValueDisplay" class="status-value" style="font-size:1.1rem">--</span>
             </div>
             <div class="status-item">
-                <span class="status-label">移動停利點</span>
-                <span id="stopPriceDisplay" class="status-value">--</span>
+                <span class="status-label">持有天數</span>
+                <span id="daysDisplay" class="status-value">-- 天</span>
             </div>
             <div class="status-item">
                 <span class="status-label">安全距離</span>
@@ -138,135 +168,181 @@
 </div>
 
 <script>
+    // 預設日期為今日
     document.getElementById('entryDate').valueAsDate = new Date();
 
     async function fetchData() {
+        const ticker = document.getElementById('tickerSymbol').value.toUpperCase().trim();
         const entryDateVal = document.getElementById('entryDate').value;
-        if (!entryDateVal) { alert("請先選擇買進日期"); return; }
+
+        if (!ticker) { alert("請輸入股票代碼"); return; }
+        if (!entryDateVal) { alert("請選擇買進日期"); return; }
 
         const btn = document.getElementById('fetchBtn');
         const msg = document.getElementById('fetchMsg');
         const entryTs = new Date(entryDateVal).getTime() / 1000;
 
         btn.disabled = true;
-        btn.innerHTML = '<div class="loader"></div> 抓取中...';
-        msg.innerText = "連線中...";
+        btn.innerHTML = '<div class="loader"></div> 連線中...';
+        msg.innerText = `正在抓取 ${ticker} 數據...`;
 
         try {
-            // 使用 CORS Proxy 抓取 Yahoo Finance
+            // CORS Proxy + Yahoo Finance API (動態代碼)
             const proxyUrl = "https://corsproxy.io/?";
-            const targetUrl = "https://query1.finance.yahoo.com/v8/finance/chart/TSLL?range=3mo&interval=1d";
+            const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=3mo&interval=1d`;
             
             const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
-            if (!response.ok) throw new Error("API Error");
+            if (!response.ok) throw new Error("查無此代碼或 API 錯誤");
             
             const data = await response.json();
             const result = data.chart.result[0];
             
-            // Get Current Price
+            // 1. 抓取現價
             const currentPrice = result.meta.regularMarketPrice;
             
-            // Get Max High since entry
+            // 2. 抓取區間最高價
             const timestamps = result.timestamp;
             const highs = result.indicators.quote[0].high;
             let maxHigh = 0;
             
-            for (let i = 0; i < timestamps.length; i++) {
-                if (timestamps[i] >= entryTs) {
-                    if (highs[i] > maxHigh) maxHigh = highs[i];
+            // 回溯尋找從買入日至今的最高價
+            if (timestamps) {
+                for (let i = 0; i < timestamps.length; i++) {
+                    if (timestamps[i] >= entryTs) {
+                        if (highs[i] > maxHigh) maxHigh = highs[i];
+                    }
                 }
             }
+            // 如果是今天剛買，最高價暫定為今日最高
             if (maxHigh === 0) maxHigh = result.meta.regularMarketDayHigh;
 
+            // 填入數值
             document.getElementById('currentPrice').value = currentPrice.toFixed(2);
             document.getElementById('highPrice').value = maxHigh.toFixed(2);
             
-            msg.innerText = "✅ 更新成功";
+            msg.innerText = `✅ 成功取得 ${ticker} 報價`;
             msg.style.color = "var(--success)";
-            calculateStrategy();
+            
+            // 若資料完整，自動觸發計算
+            if(document.getElementById('costPrice').value && document.getElementById('sharesCount').value) {
+                calculateStrategy();
+            }
 
         } catch (error) {
             console.error(error);
-            msg.innerText = "❌ 自動抓取失敗，請手動輸入。";
+            msg.innerText = `❌ 失敗：無法取得 ${ticker} 資料，請檢查代碼或手動輸入。`;
             msg.style.color = "var(--danger)";
         } finally {
             btn.disabled = false;
-            btn.innerText = "📡 自動抓取股價 (Yahoo API)";
+            btn.innerText = "📡 自動抓取現價 (Yahoo API)";
         }
     }
 
     function calculateStrategy() {
+        // 獲取所有欄位
+        const ticker = document.getElementById('tickerSymbol').value.toUpperCase();
         const cost = parseFloat(document.getElementById('costPrice').value);
+        const shares = parseInt(document.getElementById('sharesCount').value);
         const entryDateVal = document.getElementById('entryDate').value;
         const high = parseFloat(document.getElementById('highPrice').value);
         const current = parseFloat(document.getElementById('currentPrice').value);
 
-        if (isNaN(cost) || !entryDateVal || isNaN(high) || isNaN(current)) {
-            alert("請填寫完整數據"); return;
+        // 驗證
+        if (isNaN(cost) || isNaN(shares) || !entryDateVal || isNaN(high) || isNaN(current)) {
+            alert("請確認「成本」、「股數」與「價格」欄位皆已填寫完整"); return;
         }
 
+        // 基礎計算
         const entryDate = new Date(entryDateVal);
         const today = new Date();
         const daysHeld = Math.floor((today - entryDate) / (1000 * 3600 * 24)); 
         const pnlPct = (current - cost) / cost;
+        const totalValue = current * shares;
+        const totalCost = cost * shares;
+        const pnlValue = totalValue - totalCost;
         
-        const stopBreakeven = cost * 1.02;
-        const stopTrailing = high * 0.90;
+        // 策略邏輯設定 (SOP)
+        const stopBreakeven = cost * 1.02; // 保本點
+        const stopTrailing = high * 0.90;  // 移動停利點 (回檔10%)
         
         let activeStopPrice = 0;
         let stopReason = "";
 
+        // 判斷目前適用的停利/停損線
         if (high > stopBreakeven) {
+             // 已經有獲利，採用較嚴格的保本或移動停利
              activeStopPrice = Math.max(stopBreakeven, stopTrailing);
-             stopReason = (activeStopPrice === stopBreakeven) ? "保本 (+2%)" : "移動停利 (-10%)";
+             stopReason = (activeStopPrice === stopBreakeven) ? "保本 (Cost+2%)" : "移動停利 (High-10%)";
         } else {
+            // 還在成本區掙扎，採用初始停損
             activeStopPrice = cost * 0.95;
             stopReason = "初始停損 (-5%)";
         }
 
+        // UI 更新
         document.getElementById('resultCard').style.display = 'block';
+        
+        // 損益百分比顯示
         const pnlEl = document.getElementById('pnlDisplay');
         pnlEl.innerText = (pnlPct * 100).toFixed(2) + "%";
         pnlEl.className = "status-value " + (pnlPct >= 0 ? "val-green" : "val-red");
         
+        // 損益金額顯示
+        const pnlValEl = document.getElementById('pnlValueDisplay');
+        const sign = pnlValue >= 0 ? "+" : "";
+        pnlValEl.innerText = `${sign}$${Math.round(pnlValue).toLocaleString()}`;
+        pnlValEl.style.color = pnlValue >= 0 ? "var(--success)" : "var(--danger)";
+
         document.getElementById('daysDisplay').innerText = daysHeld + " 天";
-        document.getElementById('stopPriceDisplay').innerText = activeStopPrice.toFixed(2);
         
+        // 計算距離停損點
         const distToStop = (current - activeStopPrice) / current;
         const riskEl = document.getElementById('riskDisplay');
         riskEl.innerText = (distToStop * 100).toFixed(2) + "%";
         riskEl.style.color = distToStop < 0 ? "var(--danger)" : "#aaa";
 
+        // 核心決策邏輯
         const actionBox = document.getElementById('actionBox');
         const logicText = document.getElementById('logicExplain');
         let actionClass = "", actionMsg = "", logicMsg = "";
 
+        // 1. 觸發停損
         if (current < activeStopPrice) {
             actionClass = "action-danger";
-            actionMsg = "🚨 觸發停損：賣出";
-            logicMsg = `跌破 ${stopReason} ${activeStopPrice.toFixed(2)}`;
-        } else if (daysHeld >= 3 && pnlPct < 0.03 && pnlPct > -0.05) {
+            actionMsg = "🚨 觸發出場：全數賣出";
+            logicMsg = `現價 ${current} 已跌破 ${stopReason} ${activeStopPrice.toFixed(2)}。請賣出所有 ${shares} 股。`;
+        } 
+        // 2. 時間停損 (3天不漲)
+        else if (daysHeld >= 3 && pnlPct < 0.03 && pnlPct > -0.05) {
             actionClass = "action-warning";
-            actionMsg = "⚠️ 動能不足：離場";
-            logicMsg = "持有 3 天漲幅未達 3%";
-        } else if (daysHeld >= 10) {
+            actionMsg = "⚠️ 動能不足：建議離場";
+            logicMsg = "持有 3 天漲幅未達 3%，資金效率過低，建議換股操作。";
+        } 
+        // 3. 期限強制出場 (10天)
+        else if (daysHeld >= 10) {
             actionClass = "action-danger";
-            actionMsg = "🛑 期限已到：出場";
-            logicMsg = "持有已達 10 天";
-        } else if (pnlPct >= 0.10) {
+            actionMsg = "🛑 期限已到：強制出場";
+            logicMsg = "持有已達 10 天上限，為避免槓桿耗損，請全數獲利了結。";
+        } 
+        // 4. 獲利減碼 (10% 減半)
+        else if (pnlPct >= 0.10) {
+            const sellAmount = Math.floor(shares / 2);
+            const keepAmount = shares - sellAmount;
             actionClass = "action-warning";
-            actionMsg = "💰 獲利達標：減碼";
-            logicMsg = "獲利 > 10%，建議賣半";
-        } else {
+            actionMsg = `💰 獲利達標：賣出 ${sellAmount} 股`;
+            logicMsg = `獲利已超過 10%！SOP 建議賣出 50% (${sellAmount} 股) 鎖住利潤，剩餘 ${keepAmount} 股續抱博魚尾。`;
+        } 
+        // 5. 正常續抱
+        else {
             actionClass = "action-safe";
-            actionMsg = "✅ 續抱";
-            logicMsg = `安全。停損價: ${activeStopPrice.toFixed(2)}`;
+            actionMsg = "✅ 狀態良好：續抱";
+            logicMsg = `目前走勢安全。你的保護傘 (Stop Price) 位於 ${activeStopPrice.toFixed(2)} (${stopReason})。`;
         }
 
         actionBox.className = "action-banner " + actionClass;
         actionBox.innerText = actionMsg;
         actionBox.style.display = 'block';
-        logicText.innerText = logicMsg;
+        logicText.innerText = `診斷標的：${ticker} | 依據：${logicMsg}`;
     }
 </script>
 
