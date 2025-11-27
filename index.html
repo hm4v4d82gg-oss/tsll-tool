@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>槓桿 ETF 戰術儀表板 V2</title>
+    <title>槓桿戰術儀表板 V3 (含後續策略)</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -14,6 +14,7 @@
             --success: #00c853;
             --danger: #ff3d00;
             --warning: #ffab00;
+            --info: #00b0ff;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -23,7 +24,7 @@
             padding: 20px;
             line-height: 1.6;
         }
-        .container { max-width: 600px; margin: 0 auto; }
+        .container { max-width: 600px; margin: 0 auto; padding-bottom: 50px; }
         h1 { text-align: center; margin-bottom: 20px; color: var(--text-main); font-size: 1.5rem; }
         
         .card {
@@ -34,14 +35,10 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         
-        /* Grid Layout for Inputs */
+        /* Grid Layout */
         .input-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;
         }
-
         .input-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: var(--text-sub); font-size: 0.85rem; }
         input {
@@ -87,6 +84,26 @@
             margin-top:15px; font-size:0.9rem; color:#aaa; padding: 12px; 
             background: #252525; border-radius: 8px; word-break: break-all;
         }
+
+        /* Next Step Section */
+        .next-step-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1a2733;
+            border-left: 4px solid var(--info);
+            border-radius: 4px;
+            display: none; /* Hidden by default */
+        }
+        .next-step-title {
+            color: var(--info); font-weight: bold; margin-bottom: 8px; display: block;
+        }
+        .next-step-content {
+            font-size: 0.95rem; color: #d0d0d0;
+        }
+        .step-list {
+            margin: 5px 0 0 20px; padding: 0;
+        }
+        .step-list li { margin-bottom: 5px; }
         
         .loader { border: 3px solid #333; border-top: 3px solid #fff; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px;}
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -95,7 +112,7 @@
 <body>
 
 <div class="container">
-    <h1>🚀 槓桿戰術儀表板 V2</h1>
+    <h1>🚀 槓桿戰術儀表板 V3</h1>
 
     <div class="card">
         <!-- 第一排：代碼與日期 -->
@@ -164,11 +181,16 @@
 
         <div id="actionBox" class="action-banner"></div>
         <div id="logicExplain" class="logic-text"></div>
+
+        <!-- 新增：下一步戰術指引 -->
+        <div id="nextStepBox" class="next-step-box">
+            <span class="next-step-title">📋 下一步戰術指引 (Next Steps)</span>
+            <div id="nextStepContent" class="next-step-content"></div>
+        </div>
     </div>
 </div>
 
 <script>
-    // 預設日期為今日
     document.getElementById('entryDate').valueAsDate = new Date();
 
     async function fetchData() {
@@ -187,7 +209,6 @@
         msg.innerText = `正在抓取 ${ticker} 數據...`;
 
         try {
-            // CORS Proxy + Yahoo Finance API (動態代碼)
             const proxyUrl = "https://corsproxy.io/?";
             const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=3mo&interval=1d`;
             
@@ -197,15 +218,11 @@
             const data = await response.json();
             const result = data.chart.result[0];
             
-            // 1. 抓取現價
             const currentPrice = result.meta.regularMarketPrice;
-            
-            // 2. 抓取區間最高價
             const timestamps = result.timestamp;
             const highs = result.indicators.quote[0].high;
             let maxHigh = 0;
             
-            // 回溯尋找從買入日至今的最高價
             if (timestamps) {
                 for (let i = 0; i < timestamps.length; i++) {
                     if (timestamps[i] >= entryTs) {
@@ -213,24 +230,21 @@
                     }
                 }
             }
-            // 如果是今天剛買，最高價暫定為今日最高
             if (maxHigh === 0) maxHigh = result.meta.regularMarketDayHigh;
 
-            // 填入數值
             document.getElementById('currentPrice').value = currentPrice.toFixed(2);
             document.getElementById('highPrice').value = maxHigh.toFixed(2);
             
             msg.innerText = `✅ 成功取得 ${ticker} 報價`;
             msg.style.color = "var(--success)";
             
-            // 若資料完整，自動觸發計算
             if(document.getElementById('costPrice').value && document.getElementById('sharesCount').value) {
                 calculateStrategy();
             }
 
         } catch (error) {
             console.error(error);
-            msg.innerText = `❌ 失敗：無法取得 ${ticker} 資料，請檢查代碼或手動輸入。`;
+            msg.innerText = `❌ 失敗：無法取得資料，請檢查代碼。`;
             msg.style.color = "var(--danger)";
         } finally {
             btn.disabled = false;
@@ -239,7 +253,6 @@
     }
 
     function calculateStrategy() {
-        // 獲取所有欄位
         const ticker = document.getElementById('tickerSymbol').value.toUpperCase();
         const cost = parseFloat(document.getElementById('costPrice').value);
         const shares = parseInt(document.getElementById('sharesCount').value);
@@ -247,12 +260,10 @@
         const high = parseFloat(document.getElementById('highPrice').value);
         const current = parseFloat(document.getElementById('currentPrice').value);
 
-        // 驗證
         if (isNaN(cost) || isNaN(shares) || !entryDateVal || isNaN(high) || isNaN(current)) {
-            alert("請確認「成本」、「股數」與「價格」欄位皆已填寫完整"); return;
+            alert("請填寫所有欄位"); return;
         }
 
-        // 基礎計算
         const entryDate = new Date(entryDateVal);
         const today = new Date();
         const daysHeld = Math.floor((today - entryDate) / (1000 * 3600 * 24)); 
@@ -261,33 +272,26 @@
         const totalCost = cost * shares;
         const pnlValue = totalValue - totalCost;
         
-        // 策略邏輯設定 (SOP)
-        const stopBreakeven = cost * 1.02; // 保本點
-        const stopTrailing = high * 0.90;  // 移動停利點 (回檔10%)
+        const stopBreakeven = cost * 1.02;
+        const stopTrailing = high * 0.90;
         
         let activeStopPrice = 0;
         let stopReason = "";
 
-        // 判斷目前適用的停利/停損線
         if (high > stopBreakeven) {
-             // 已經有獲利，採用較嚴格的保本或移動停利
              activeStopPrice = Math.max(stopBreakeven, stopTrailing);
              stopReason = (activeStopPrice === stopBreakeven) ? "保本 (Cost+2%)" : "移動停利 (High-10%)";
         } else {
-            // 還在成本區掙扎，採用初始停損
             activeStopPrice = cost * 0.95;
             stopReason = "初始停損 (-5%)";
         }
 
-        // UI 更新
         document.getElementById('resultCard').style.display = 'block';
         
-        // 損益百分比顯示
         const pnlEl = document.getElementById('pnlDisplay');
         pnlEl.innerText = (pnlPct * 100).toFixed(2) + "%";
         pnlEl.className = "status-value " + (pnlPct >= 0 ? "val-green" : "val-red");
         
-        // 損益金額顯示
         const pnlValEl = document.getElementById('pnlValueDisplay');
         const sign = pnlValue >= 0 ? "+" : "";
         pnlValEl.innerText = `${sign}$${Math.round(pnlValue).toLocaleString()}`;
@@ -295,54 +299,95 @@
 
         document.getElementById('daysDisplay').innerText = daysHeld + " 天";
         
-        // 計算距離停損點
         const distToStop = (current - activeStopPrice) / current;
         const riskEl = document.getElementById('riskDisplay');
         riskEl.innerText = (distToStop * 100).toFixed(2) + "%";
         riskEl.style.color = distToStop < 0 ? "var(--danger)" : "#aaa";
 
-        // 核心決策邏輯
         const actionBox = document.getElementById('actionBox');
         const logicText = document.getElementById('logicExplain');
+        const nextStepBox = document.getElementById('nextStepBox');
+        const nextStepContent = document.getElementById('nextStepContent');
+        
         let actionClass = "", actionMsg = "", logicMsg = "";
+        let nextStepHTML = "";
 
-        // 1. 觸發停損
+        // --- Scenario Analysis ---
+
+        // 1. Stop Loss Hit
         if (current < activeStopPrice) {
             actionClass = "action-danger";
             actionMsg = "🚨 觸發出場：全數賣出";
-            logicMsg = `現價 ${current} 已跌破 ${stopReason} ${activeStopPrice.toFixed(2)}。請賣出所有 ${shares} 股。`;
+            logicMsg = `現價 ${current} 跌破 ${stopReason} ${activeStopPrice.toFixed(2)}。`;
+            
+            nextStepHTML = `
+                <ul class="step-list">
+                    <li><strong>冷靜期：</strong>請空手觀望至少 2 個交易日，不要急著買回。</li>
+                    <li><strong>檢討：</strong>若 3 天內又漲回去，代表停損設太緊，下次可考慮放大至 ATR * 2。</li>
+                    <li><strong>替代方案：</strong>若仍看好方向，改買正股 (1倍槓桿) 以降低波動風險。</li>
+                </ul>`;
         } 
-        // 2. 時間停損 (3天不漲)
+        // 2. Time Stop (No Momentum)
         else if (daysHeld >= 3 && pnlPct < 0.03 && pnlPct > -0.05) {
             actionClass = "action-warning";
             actionMsg = "⚠️ 動能不足：建議離場";
-            logicMsg = "持有 3 天漲幅未達 3%，資金效率過低，建議換股操作。";
+            logicMsg = "持有 3 天漲幅未達 3%，效率過低。";
+            
+            nextStepHTML = `
+                <ul class="step-list">
+                    <li><strong>換股操作：</strong>資金是有時間成本的，轉移到更強勢的標的。</li>
+                    <li><strong>重新入場條件：</strong>直到股價明確突破「近 3 日最高點」且帶量，才考慮重新買回。</li>
+                </ul>`;
         } 
-        // 3. 期限強制出場 (10天)
+        // 3. Max Hold Expiration
         else if (daysHeld >= 10) {
             actionClass = "action-danger";
             actionMsg = "🛑 期限已到：強制出場";
-            logicMsg = "持有已達 10 天上限，為避免槓桿耗損，請全數獲利了結。";
+            logicMsg = "持有已達 10 天上限，槓桿耗損風險大增。";
+            
+            nextStepHTML = `
+                <ul class="step-list">
+                    <li><strong>轉倉策略：</strong>若仍看多，請將資金轉入正股 (如 TSLA/NVDA)。</li>
+                    <li><strong>優勢：</strong>正股沒有每日重置耗損，適合長期持有吃到完整波段。</li>
+                    <li><strong>休息：</strong>若一定要做槓桿，請休息 1 天再重新計算 10 天週期。</li>
+                </ul>`;
         } 
-        // 4. 獲利減碼 (10% 減半)
+        // 4. Profit Taking (Scale Out)
         else if (pnlPct >= 0.10) {
             const sellAmount = Math.floor(shares / 2);
             const keepAmount = shares - sellAmount;
             actionClass = "action-warning";
             actionMsg = `💰 獲利達標：賣出 ${sellAmount} 股`;
-            logicMsg = `獲利已超過 10%！SOP 建議賣出 50% (${sellAmount} 股) 鎖住利潤，剩餘 ${keepAmount} 股續抱博魚尾。`;
+            logicMsg = `獲利 > 10%，建議鎖住 50% 利潤。`;
+            
+            nextStepHTML = `
+                <ul class="step-list">
+                    <li><strong>剩餘部位 (${keepAmount} 股)：</strong>進入「無風險博魚尾」模式。</li>
+                    <li><strong>新停損單：</strong>請將剩餘部位的停損上移至 <strong>${(cost * 1.05).toFixed(2)}</strong> (確保整筆交易大賺)。</li>
+                    <li><strong>心態：</strong>剩下的部位就讓它飄，不爆賺不出場，因為本金已經拿回來了。</li>
+                </ul>`;
         } 
-        // 5. 正常續抱
+        // 5. Hold
         else {
             actionClass = "action-safe";
             actionMsg = "✅ 狀態良好：續抱";
-            logicMsg = `目前走勢安全。你的保護傘 (Stop Price) 位於 ${activeStopPrice.toFixed(2)} (${stopReason})。`;
+            logicMsg = `位於安全區間。停損價: ${activeStopPrice.toFixed(2)}`;
+            
+            nextStepHTML = `
+                <ul class="step-list">
+                    <li><strong>每日任務：</strong>收盤前檢查股價是否跌破 5日均線。</li>
+                    <li><strong>加碼禁令：</strong>除非股價突破前高，否則不要在下跌途中加碼攤平。</li>
+                    <li><strong>耐心：</strong>給市場一點時間發酵，目前策略執行中。</li>
+                </ul>`;
         }
 
         actionBox.className = "action-banner " + actionClass;
         actionBox.innerText = actionMsg;
         actionBox.style.display = 'block';
-        logicText.innerText = `診斷標的：${ticker} | 依據：${logicMsg}`;
+        logicText.innerText = `診斷依據：${logicMsg}`;
+        
+        nextStepBox.style.display = 'block';
+        nextStepContent.innerHTML = nextStepHTML;
     }
 </script>
 
