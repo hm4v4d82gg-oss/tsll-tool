@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>槓桿戰術儀表板 V4 (含績效統計)</title>
+    <title>槓桿戰術儀表板 V5 (均線強化版)</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -21,18 +21,14 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-            line-height: 1.6;
+            margin: 0; padding: 20px; line-height: 1.6;
         }
         .container { max-width: 600px; margin: 0 auto; padding-bottom: 80px; }
         h1 { text-align: center; margin-bottom: 20px; color: var(--text-main); font-size: 1.5rem; }
         
         .card {
             background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
+            border-radius: 12px; padding: 20px; margin-bottom: 20px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         
@@ -40,16 +36,12 @@
         .input-group { margin-bottom: 10px; }
         label { display: block; margin-bottom: 5px; color: var(--text-sub); font-size: 0.85rem; }
         input {
-            width: 100%; padding: 12px; background: #2c2c2c;
-            border: 1px solid #444; border-radius: 8px; color: white;
-            font-size: 1rem; box-sizing: border-box;
+            width: 100%; padding: 12px; background: #2c2c2c; border: 1px solid #444; border-radius: 8px; color: white; font-size: 1rem; box-sizing: border-box;
         }
         input:focus { border-color: var(--accent); outline: none; }
         
         button {
-            width: 100%; padding: 14px; border: none; border-radius: 8px;
-            font-size: 1rem; cursor: pointer; font-weight: bold;
-            color: white; transition: opacity 0.2s; margin-top: 5px;
+            width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: bold; color: white; transition: opacity 0.2s; margin-top: 5px;
         }
         .btn-fetch { background-color: #6200ea; margin-bottom: 15px; } 
         .btn-calc { background-color: var(--accent); }
@@ -58,7 +50,6 @@
         button:hover { opacity: 0.9; }
         button:disabled { background-color: #444; cursor: not-allowed; color: #888; }
 
-        /* Status Grid */
         .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .status-item { background: #252525; padding: 12px; border-radius: 10px; text-align: center; }
         .status-label { font-size: 0.75rem; color: var(--text-sub); display: block; }
@@ -66,37 +57,31 @@
         .val-green { color: var(--success); }
         .val-red { color: var(--danger); }
         
-        /* Action Banner */
         .action-banner {
-            padding: 15px; border-radius: 8px; text-align: center;
-            font-weight: bold; font-size: 1.2rem; margin-top: 10px; display: none;
+            padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 1.2rem; margin-top: 10px; display: none;
         }
         .action-safe { background: rgba(0, 200, 83, 0.2); color: var(--success); border: 1px solid var(--success); }
         .action-danger { background: rgba(255, 61, 0, 0.2); color: var(--danger); border: 1px solid var(--danger); }
         .action-warning { background: rgba(255, 171, 0, 0.2); color: var(--warning); border: 1px solid var(--warning); }
 
         .logic-text {
-            margin-top:15px; font-size:0.9rem; color:#aaa; padding: 12px; 
-            background: #252525; border-radius: 8px; word-break: break-all;
+            margin-top:15px; font-size:0.9rem; color:#aaa; padding: 12px; background: #252525; border-radius: 8px; word-break: break-all;
         }
 
-        /* Next Step & History */
-        .section-title {
-            margin-top: 30px; margin-bottom: 10px; font-size: 1.1rem; font-weight: bold; border-left: 4px solid var(--accent); padding-left: 10px;
+        /* MA Indicator Badge */
+        .ma-badge {
+            display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; margin-left: 5px; vertical-align: middle;
         }
-        
-        /* Table Style */
-        .history-table {
-            width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 10px;
-        }
+        .ma-up { background: rgba(0, 200, 83, 0.2); color: var(--success); border: 1px solid var(--success); }
+        .ma-down { background: rgba(255, 61, 0, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+
+        .history-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 10px; }
         .history-table th { text-align: left; color: var(--text-sub); padding: 8px; border-bottom: 1px solid var(--border); }
         .history-table td { padding: 8px; border-bottom: 1px solid #2a2a2a; color: #ccc; }
         .history-pnl.positive { color: var(--success); }
         .history-pnl.negative { color: var(--danger); }
         
-        .stats-summary {
-            display: flex; gap: 15px; background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 15px;
-        }
+        .stats-summary { display: flex; gap: 15px; background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
         .stat-box { flex: 1; text-align: center; }
         .stat-val { font-size: 1.2rem; font-weight: bold; display: block; }
         .stat-lbl { font-size: 0.8rem; color: var(--text-sub); }
@@ -104,7 +89,6 @@
         .loader { border: 3px solid #333; border-top: 3px solid #fff; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px;}
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Tab Buttons */
         .tab-container { display: flex; gap: 10px; margin-bottom: 15px; }
         .tab-btn { background: #2c2c2c; padding: 10px; flex: 1; text-align: center; cursor: pointer; border-radius: 8px; color: #888; }
         .tab-btn.active { background: var(--accent); color: white; font-weight: bold; }
@@ -113,20 +97,19 @@
 <body>
 
 <div class="container">
-    <h1>📊 戰術儀表板 V4</h1>
+    <h1>📉 戰術儀表板 V5 (均線版)</h1>
 
-    <!-- Tabs -->
     <div class="tab-container">
         <div class="tab-btn active" onclick="switchTab('dashboard')">📈 診斷面板</div>
         <div class="tab-btn" onclick="switchTab('history')">📝 交易紀錄</div>
     </div>
 
-    <!-- DASHBOARD VIEW -->
+    <!-- DASHBOARD -->
     <div id="view-dashboard">
         <div class="card">
             <div class="input-row">
                 <div class="input-group">
-                    <label>標的代碼 (Ticker)</label>
+                    <label>標的代碼</label>
                     <input type="text" id="tickerSymbol" value="TSLL" style="text-transform:uppercase; font-weight:bold;">
                 </div>
                 <div class="input-group">
@@ -136,17 +119,28 @@
             </div>
             <div class="input-row">
                 <div class="input-group">
-                    <label>成本 (Cost)</label>
+                    <label>成本</label>
                     <input type="number" id="costPrice" placeholder="100.0" step="0.01">
                 </div>
                 <div class="input-group">
-                    <label>股數 (Shares)</label>
+                    <label>股數</label>
                     <input type="number" id="sharesCount" placeholder="200">
                 </div>
             </div>
             
-            <button onclick="fetchData()" class="btn-fetch" id="fetchBtn">📡 自動抓取現價</button>
+            <button onclick="fetchData()" class="btn-fetch" id="fetchBtn">📡 抓取現價與均線 (MA)</button>
             <div id="fetchMsg" style="font-size:0.8rem; color:#888; margin-bottom:15px; text-align:center;"></div>
+
+            <div class="input-row">
+                <div class="input-group">
+                    <label>5日均線 (5MA) <span id="ma5Badge" class="ma-badge" style="display:none;">--</span></label>
+                    <input type="number" id="ma5Price" placeholder="系統自動算" step="0.01" style="color:var(--warning);">
+                </div>
+                <div class="input-group">
+                    <label>20日均線 (20MA) <span id="ma20Badge" class="ma-badge" style="display:none;">--</span></label>
+                    <input type="number" id="ma20Price" placeholder="系統自動算" step="0.01" style="color:var(--info);">
+                </div>
+            </div>
 
             <div class="input-row">
                 <div class="input-group">
@@ -155,11 +149,11 @@
                 </div>
                 <div class="input-group">
                     <label>目前現價</label>
-                    <input type="number" id="currentPrice" placeholder="自動填入" step="0.01">
+                    <input type="number" id="currentPrice" placeholder="自動填入" step="0.01" style="font-weight:bold;">
                 </div>
             </div>
             
-            <button onclick="calculateStrategy()" class="btn-calc">開始診斷</button>
+            <button onclick="calculateStrategy()" class="btn-calc">執行 MA 策略診斷</button>
         </div>
 
         <div id="resultCard" class="card" style="display:none;">
@@ -177,348 +171,30 @@
                     <span id="daysDisplay" class="status-value">-- 天</span>
                 </div>
                 <div class="status-item">
-                    <span class="status-label">安全距離</span>
+                    <span class="status-label">距離停損/停利</span>
                     <span id="riskDisplay" class="status-value">--%</span>
                 </div>
             </div>
 
             <div id="actionBox" class="action-banner"></div>
             <div id="logicExplain" class="logic-text"></div>
-
-            <!-- 記錄按鈕 -->
-            <button onclick="saveTradeRecord()" class="btn-record" id="recordBtn" style="display:none;">
-                💾 將此筆交易存入紀錄
-            </button>
+            <button onclick="saveTradeRecord()" class="btn-record" id="recordBtn" style="display:none;">💾 存入紀錄</button>
         </div>
     </div>
 
-    <!-- HISTORY VIEW -->
+    <!-- HISTORY -->
     <div id="view-history" style="display:none;">
         <div class="card">
             <div class="stats-summary">
-                <div class="stat-box">
-                    <span class="stat-val" id="totalPnl">$0</span>
-                    <span class="stat-lbl">總獲利</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-val" id="totalTrades">0</span>
-                    <span class="stat-lbl">交易次數</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-val" id="winRate">0%</span>
-                    <span class="stat-lbl">勝率</span>
-                </div>
+                <div class="stat-box"><span class="stat-val" id="totalPnl">$0</span><span class="stat-lbl">總獲利</span></div>
+                <div class="stat-box"><span class="stat-val" id="totalTrades">0</span><span class="stat-lbl">交易次數</span></div>
+                <div class="stat-box"><span class="stat-val" id="winRate">0%</span><span class="stat-lbl">勝率</span></div>
             </div>
-
             <div style="overflow-x:auto;">
                 <table class="history-table">
-                    <thead>
-                        <tr>
-                            <th>日期</th>
-                            <th>標的</th>
-                            <th>動作</th>
-                            <th>股數</th>
-                            <th>出場價</th>
-                            <th>損益</th>
-                            <th>刪除</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyList">
-                        <!-- JS will populate this -->
-                    </tbody>
+                    <thead><tr><th>日期</th><th>標的</th><th>動作</th><th>股數</th><th>價位</th><th>損益</th><th></th></tr></thead>
+                    <tbody id="historyList"></tbody>
                 </table>
             </div>
-            
             <div style="margin-top:20px; display:flex; gap:10px;">
-                <button onclick="exportCSV()" style="background:#333;">📥 匯出 Excel (CSV)</button>
-                <button onclick="clearHistory()" style="background:#422;">🗑️ 清空紀錄</button>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<script>
-    // Init
-    document.getElementById('entryDate').valueAsDate = new Date();
-    let currentStrategyResult = null; // Store temp result for saving
-    
-    // Load History on startup
-    refreshHistoryUI();
-
-    function switchTab(tabName) {
-        document.getElementById('view-dashboard').style.display = tabName === 'dashboard' ? 'block' : 'none';
-        document.getElementById('view-history').style.display = tabName === 'history' ? 'block' : 'none';
-        
-        // Toggle Tab Styles
-        const tabs = document.querySelectorAll('.tab-btn');
-        tabs[0].classList.toggle('active', tabName === 'dashboard');
-        tabs[1].classList.toggle('active', tabName === 'history');
-        
-        if(tabName === 'history') refreshHistoryUI();
-    }
-
-    async function fetchData() {
-        const ticker = document.getElementById('tickerSymbol').value.toUpperCase().trim();
-        const entryDateVal = document.getElementById('entryDate').value;
-        const btn = document.getElementById('fetchBtn');
-        const msg = document.getElementById('fetchMsg');
-        
-        if (!ticker || !entryDateVal) { alert("資料不完整"); return; }
-
-        btn.disabled = true;
-        btn.innerHTML = '<div class="loader"></div> 抓取中...';
-        msg.innerText = `正在抓取 ${ticker}...`;
-
-        try {
-            const proxyUrl = "https://corsproxy.io/?";
-            const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=3mo&interval=1d`;
-            const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
-            
-            if (!response.ok) throw new Error("API Error");
-            const data = await response.json();
-            const result = data.chart.result[0];
-            
-            const currentPrice = result.meta.regularMarketPrice;
-            const entryTs = new Date(entryDateVal).getTime() / 1000;
-            const timestamps = result.timestamp;
-            const highs = result.indicators.quote[0].high;
-            let maxHigh = 0;
-            
-            if (timestamps) {
-                for (let i = 0; i < timestamps.length; i++) {
-                    if (timestamps[i] >= entryTs && highs[i] > maxHigh) maxHigh = highs[i];
-                }
-            }
-            if (maxHigh === 0) maxHigh = result.meta.regularMarketDayHigh;
-
-            document.getElementById('currentPrice').value = currentPrice.toFixed(2);
-            document.getElementById('highPrice').value = maxHigh.toFixed(2);
-            
-            msg.innerText = "✅ 報價更新成功";
-            msg.style.color = "var(--success)";
-            
-            if(document.getElementById('costPrice').value && document.getElementById('sharesCount').value) {
-                calculateStrategy();
-            }
-
-        } catch (error) {
-            console.error(error);
-            msg.innerText = "❌ 抓取失敗，請手動輸入";
-            msg.style.color = "var(--danger)";
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "📡 自動抓取現價";
-        }
-    }
-
-    function calculateStrategy() {
-        const ticker = document.getElementById('tickerSymbol').value.toUpperCase();
-        const cost = parseFloat(document.getElementById('costPrice').value);
-        const shares = parseInt(document.getElementById('sharesCount').value);
-        const entryDateVal = document.getElementById('entryDate').value;
-        const high = parseFloat(document.getElementById('highPrice').value);
-        const current = parseFloat(document.getElementById('currentPrice').value);
-
-        if (isNaN(cost) || isNaN(shares) || !entryDateVal || isNaN(high) || isNaN(current)) {
-            alert("請填寫完整資料"); return;
-        }
-
-        const entryDate = new Date(entryDateVal);
-        const today = new Date();
-        const daysHeld = Math.floor((today - entryDate) / (1000 * 3600 * 24)); 
-        const pnlPct = (current - cost) / cost;
-        const totalValue = current * shares;
-        const totalCost = cost * shares;
-        const pnlValue = totalValue - totalCost;
-        
-        // Strategy Logic
-        const stopBreakeven = cost * 1.02;
-        const stopTrailing = high * 0.90;
-        let activeStopPrice = high > stopBreakeven ? Math.max(stopBreakeven, stopTrailing) : cost * 0.95;
-        let stopReason = high > stopBreakeven ? "移動停利" : "初始停損";
-
-        // UI Updates
-        document.getElementById('resultCard').style.display = 'block';
-        
-        const pnlEl = document.getElementById('pnlDisplay');
-        pnlEl.innerText = (pnlPct * 100).toFixed(2) + "%";
-        pnlEl.className = "status-value " + (pnlPct >= 0 ? "val-green" : "val-red");
-        
-        const pnlValEl = document.getElementById('pnlValueDisplay');
-        pnlValEl.innerText = (pnlValue >= 0 ? "+" : "") + Math.round(pnlValue).toLocaleString();
-        pnlValEl.style.color = pnlValue >= 0 ? "var(--success)" : "var(--danger)";
-
-        document.getElementById('daysDisplay').innerText = daysHeld + " 天";
-        
-        const distToStop = (current - activeStopPrice) / current;
-        document.getElementById('riskDisplay').innerText = (distToStop * 100).toFixed(2) + "%";
-
-        const actionBox = document.getElementById('actionBox');
-        const logicText = document.getElementById('logicExplain');
-        const recordBtn = document.getElementById('recordBtn');
-        
-        let actionType = "HOLD"; 
-        let actionMsg = "";
-        let actionClass = "";
-        let logicMsg = "";
-        let sharesToSell = 0;
-
-        // Logic Determination
-        if (current < activeStopPrice) {
-            actionType = "SELL_ALL";
-            actionClass = "action-danger";
-            actionMsg = "🚨 觸發停損：全數賣出";
-            logicMsg = `跌破 ${stopReason} ${activeStopPrice.toFixed(2)}`;
-            sharesToSell = shares;
-        } 
-        else if (daysHeld >= 3 && pnlPct < 0.03 && pnlPct > -0.05) {
-            actionType = "SELL_ALL";
-            actionClass = "action-warning";
-            actionMsg = "⚠️ 動能不足：建議離場";
-            logicMsg = "3 天漲幅未達 3%";
-            sharesToSell = shares;
-        } 
-        else if (daysHeld >= 10) {
-            actionType = "SELL_ALL";
-            actionClass = "action-danger";
-            actionMsg = "🛑 期限已到：強制出場";
-            logicMsg = "持有已達 10 天";
-            sharesToSell = shares;
-        } 
-        else if (pnlPct >= 0.10) {
-            actionType = "SELL_HALF";
-            sharesToSell = Math.floor(shares / 2);
-            actionClass = "action-warning";
-            actionMsg = `💰 獲利達標：賣出 ${sharesToSell} 股`;
-            logicMsg = "獲利 > 10%，減碼 50%";
-        } 
-        else {
-            actionType = "HOLD";
-            actionClass = "action-safe";
-            actionMsg = "✅ 狀態良好：續抱";
-            logicMsg = `安全區間。停損: ${activeStopPrice.toFixed(2)}`;
-        }
-
-        actionBox.className = "action-banner " + actionClass;
-        actionBox.innerText = actionMsg;
-        actionBox.style.display = 'block';
-        logicText.innerText = logicMsg;
-
-        // Prepare Data for Recording
-        if (actionType !== "HOLD") {
-            recordBtn.style.display = 'block';
-            // Calculate Realized PnL for the sold portion
-            const realizedPnL = (current - cost) * sharesToSell;
-            
-            currentStrategyResult = {
-                date: new Date().toISOString().split('T')[0],
-                ticker: ticker,
-                action: actionMsg.split('：')[0], // Get simple action name
-                shares: sharesToSell,
-                price: current,
-                pnl: realizedPnL
-            };
-        } else {
-            recordBtn.style.display = 'none';
-        }
-    }
-
-    // --- HISTORY FUNCTIONS ---
-
-    function saveTradeRecord() {
-        if (!currentStrategyResult) return;
-        
-        // 1. Get existing history
-        let history = JSON.parse(localStorage.getItem('tsll_trade_history') || "[]");
-        
-        // 2. Add ID
-        currentStrategyResult.id = Date.now();
-        
-        // 3. Push new record
-        history.push(currentStrategyResult);
-        
-        // 4. Save back
-        localStorage.setItem('tsll_trade_history', JSON.stringify(history));
-        
-        alert("✅ 交易已儲存！請至「交易紀錄」分頁查看。");
-        refreshHistoryUI();
-        document.getElementById('recordBtn').style.display = 'none'; // Prevent double save
-    }
-
-    function refreshHistoryUI() {
-        const history = JSON.parse(localStorage.getItem('tsll_trade_history') || "[]");
-        const tbody = document.getElementById('historyList');
-        tbody.innerHTML = "";
-
-        let totalPnl = 0;
-        let wins = 0;
-        let totalTrades = history.length;
-
-        // Sort by date desc
-        history.sort((a, b) => b.id - a.id);
-
-        history.forEach(item => {
-            totalPnl += item.pnl;
-            if (item.pnl > 0) wins++;
-
-            const tr = document.createElement('tr');
-            const pnlClass = item.pnl >= 0 ? "positive" : "negative";
-            const pnlSign = item.pnl >= 0 ? "+" : "";
-            
-            tr.innerHTML = `
-                <td>${item.date}</td>
-                <td>${item.ticker}</td>
-                <td style="font-size:0.8rem;">${item.action}</td>
-                <td>${item.shares}</td>
-                <td>${item.price}</td>
-                <td class="history-pnl ${pnlClass}">${pnlSign}${Math.round(item.pnl)}</td>
-                <td><button class="btn-danger" onclick="deleteRecord(${item.id})">X</button></td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-        // Update Stats
-        document.getElementById('totalPnl').innerText = "$" + Math.round(totalPnl).toLocaleString();
-        document.getElementById('totalPnl').style.color = totalPnl >= 0 ? "var(--success)" : "var(--danger)";
-        document.getElementById('totalTrades').innerText = totalTrades;
-        document.getElementById('winRate').innerText = totalTrades > 0 ? Math.round((wins/totalTrades)*100) + "%" : "0%";
-    }
-
-    function deleteRecord(id) {
-        if(!confirm("確定要刪除這筆紀錄嗎？")) return;
-        let history = JSON.parse(localStorage.getItem('tsll_trade_history') || "[]");
-        history = history.filter(item => item.id !== id);
-        localStorage.setItem('tsll_trade_history', JSON.stringify(history));
-        refreshHistoryUI();
-    }
-
-    function clearHistory() {
-        if(!confirm("⚠️ 警告：確定要清空所有歷史紀錄嗎？此動作無法復原。")) return;
-        localStorage.removeItem('tsll_trade_history');
-        refreshHistoryUI();
-    }
-    
-    function exportCSV() {
-        const history = JSON.parse(localStorage.getItem('tsll_trade_history') || "[]");
-        if (history.length === 0) { alert("沒有紀錄可匯出"); return; }
-        
-        let csvContent = "data:text/csv;charset=utf-8,\ufeff"; // BOM for Excel
-        csvContent += "日期,標的,動作,股數,成交價,損益\n";
-        
-        history.forEach(row => {
-            csvContent += `${row.date},${row.ticker},${row.action},${row.shares},${row.price},${row.pnl}\n`;
-        });
-        
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "trade_history.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-</script>
-
-</body>
-</html>
+                <button onclick="exportCSV()" style="background:#333;">📥 匯出</button>
