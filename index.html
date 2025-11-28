@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V3</title>
+    <title>槓桿戰術儀表板 V4 (含績效統計)</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -15,6 +15,7 @@
             --danger: #ff3d00;
             --warning: #ffab00;
             --info: #00b0ff;
+            --border: #333;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -24,7 +25,7 @@
             padding: 20px;
             line-height: 1.6;
         }
-        .container { max-width: 600px; margin: 0 auto; padding-bottom: 50px; }
+        .container { max-width: 600px; margin: 0 auto; padding-bottom: 80px; }
         h1 { text-align: center; margin-bottom: 20px; color: var(--text-main); font-size: 1.5rem; }
         
         .card {
@@ -35,11 +36,8 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         
-        /* Grid Layout */
-        .input-row {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;
-        }
-        .input-group { margin-bottom: 15px; }
+        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .input-group { margin-bottom: 10px; }
         label { display: block; margin-bottom: 5px; color: var(--text-sub); font-size: 0.85rem; }
         input {
             width: 100%; padding: 12px; background: #2c2c2c;
@@ -48,7 +46,6 @@
         }
         input:focus { border-color: var(--accent); outline: none; }
         
-        /* Buttons */
         button {
             width: 100%; padding: 14px; border: none; border-radius: 8px;
             font-size: 1rem; cursor: pointer; font-weight: bold;
@@ -56,16 +53,14 @@
         }
         .btn-fetch { background-color: #6200ea; margin-bottom: 15px; } 
         .btn-calc { background-color: var(--accent); }
+        .btn-record { background-color: var(--success); margin-top: 15px; }
+        .btn-danger { background-color: var(--danger); font-size: 0.8rem; padding: 8px; width: auto; }
         button:hover { opacity: 0.9; }
         button:disabled { background-color: #444; cursor: not-allowed; color: #888; }
 
         /* Status Grid */
-        .status-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;
-        }
-        .status-item {
-            background: #252525; padding: 12px; border-radius: 10px; text-align: center;
-        }
+        .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .status-item { background: #252525; padding: 12px; border-radius: 10px; text-align: center; }
         .status-label { font-size: 0.75rem; color: var(--text-sub); display: block; }
         .status-value { font-size: 1.3rem; font-weight: bold; display: block; margin-top: 4px; }
         .val-green { color: var(--success); }
@@ -85,149 +80,214 @@
             background: #252525; border-radius: 8px; word-break: break-all;
         }
 
-        /* Next Step Section */
-        .next-step-box {
-            margin-top: 20px;
-            padding: 15px;
-            background: #1a2733;
-            border-left: 4px solid var(--info);
-            border-radius: 4px;
-            display: none; /* Hidden by default */
+        /* Next Step & History */
+        .section-title {
+            margin-top: 30px; margin-bottom: 10px; font-size: 1.1rem; font-weight: bold; border-left: 4px solid var(--accent); padding-left: 10px;
         }
-        .next-step-title {
-            color: var(--info); font-weight: bold; margin-bottom: 8px; display: block;
-        }
-        .next-step-content {
-            font-size: 0.95rem; color: #d0d0d0;
-        }
-        .step-list {
-            margin: 5px 0 0 20px; padding: 0;
-        }
-        .step-list li { margin-bottom: 5px; }
         
+        /* Table Style */
+        .history-table {
+            width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 10px;
+        }
+        .history-table th { text-align: left; color: var(--text-sub); padding: 8px; border-bottom: 1px solid var(--border); }
+        .history-table td { padding: 8px; border-bottom: 1px solid #2a2a2a; color: #ccc; }
+        .history-pnl.positive { color: var(--success); }
+        .history-pnl.negative { color: var(--danger); }
+        
+        .stats-summary {
+            display: flex; gap: 15px; background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 15px;
+        }
+        .stat-box { flex: 1; text-align: center; }
+        .stat-val { font-size: 1.2rem; font-weight: bold; display: block; }
+        .stat-lbl { font-size: 0.8rem; color: var(--text-sub); }
+
         .loader { border: 3px solid #333; border-top: 3px solid #fff; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px;}
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Tab Buttons */
+        .tab-container { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-btn { background: #2c2c2c; padding: 10px; flex: 1; text-align: center; cursor: pointer; border-radius: 8px; color: #888; }
+        .tab-btn.active { background: var(--accent); color: white; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>V3</h1>
+    <h1>📊 戰術儀表板 V4</h1>
 
-    <div class="card">
-        <!-- 第一排：代碼與日期 -->
-        <div class="input-row">
-            <div class="input-group">
-                <label>標的代碼 (Ticker)</label>
-                <input type="text" id="tickerSymbol" value="TSLL" style="text-transform:uppercase; font-weight:bold; letter-spacing:1px;">
-            </div>
-            <div class="input-group">
-                <label>買進日期 (Date)</label>
-                <input type="date" id="entryDate">
-            </div>
-        </div>
-
-        <!-- 第二排：成本與股數 -->
-        <div class="input-row">
-            <div class="input-group">
-                <label>買進成本 (Cost)</label>
-                <input type="number" id="costPrice" placeholder="例如: 100.0" step="0.01">
-            </div>
-            <div class="input-group">
-                <label>持有股數 (Shares)</label>
-                <input type="number" id="sharesCount" placeholder="例如: 200">
-            </div>
-        </div>
-        
-        <button onclick="fetchData()" class="btn-fetch" id="fetchBtn">
-            📡 自動抓取現價 (Yahoo API)
-        </button>
-        <div id="fetchMsg" style="font-size:0.8rem; color:#888; margin-bottom:15px; text-align:center;"></div>
-
-        <!-- 第三排：抓取結果 -->
-        <div class="input-row">
-            <div class="input-group">
-                <label>區間最高價 (Max High)</label>
-                <input type="number" id="highPrice" placeholder="系統自動填入" step="0.01">
-            </div>
-            <div class="input-group">
-                <label>目前現價 (Current)</label>
-                <input type="number" id="currentPrice" placeholder="系統自動填入" step="0.01">
-            </div>
-        </div>
-        
-        <button onclick="calculateStrategy()" class="btn-calc">開始診斷</button>
+    <!-- Tabs -->
+    <div class="tab-container">
+        <div class="tab-btn active" onclick="switchTab('dashboard')">📈 診斷面板</div>
+        <div class="tab-btn" onclick="switchTab('history')">📝 交易紀錄</div>
     </div>
 
-    <div id="resultCard" class="card" style="display:none;">
-        <div class="status-grid">
-            <div class="status-item">
-                <span class="status-label">目前損益</span>
-                <span id="pnlDisplay" class="status-value">--%</span>
+    <!-- DASHBOARD VIEW -->
+    <div id="view-dashboard">
+        <div class="card">
+            <div class="input-row">
+                <div class="input-group">
+                    <label>標的代碼 (Ticker)</label>
+                    <input type="text" id="tickerSymbol" value="TSLL" style="text-transform:uppercase; font-weight:bold;">
+                </div>
+                <div class="input-group">
+                    <label>買進日期</label>
+                    <input type="date" id="entryDate">
+                </div>
             </div>
-            <div class="status-item">
-                <span class="status-label">帳面金額變動</span>
-                <span id="pnlValueDisplay" class="status-value" style="font-size:1.1rem">--</span>
+            <div class="input-row">
+                <div class="input-group">
+                    <label>成本 (Cost)</label>
+                    <input type="number" id="costPrice" placeholder="100.0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>股數 (Shares)</label>
+                    <input type="number" id="sharesCount" placeholder="200">
+                </div>
             </div>
-            <div class="status-item">
-                <span class="status-label">持有天數</span>
-                <span id="daysDisplay" class="status-value">-- 天</span>
+            
+            <button onclick="fetchData()" class="btn-fetch" id="fetchBtn">📡 自動抓取現價</button>
+            <div id="fetchMsg" style="font-size:0.8rem; color:#888; margin-bottom:15px; text-align:center;"></div>
+
+            <div class="input-row">
+                <div class="input-group">
+                    <label>區間最高價</label>
+                    <input type="number" id="highPrice" placeholder="自動填入" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>目前現價</label>
+                    <input type="number" id="currentPrice" placeholder="自動填入" step="0.01">
+                </div>
             </div>
-            <div class="status-item">
-                <span class="status-label">安全距離</span>
-                <span id="riskDisplay" class="status-value">--%</span>
-            </div>
+            
+            <button onclick="calculateStrategy()" class="btn-calc">開始診斷</button>
         </div>
 
-        <div id="actionBox" class="action-banner"></div>
-        <div id="logicExplain" class="logic-text"></div>
+        <div id="resultCard" class="card" style="display:none;">
+            <div class="status-grid">
+                <div class="status-item">
+                    <span class="status-label">損益率</span>
+                    <span id="pnlDisplay" class="status-value">--%</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">帳面損益</span>
+                    <span id="pnlValueDisplay" class="status-value">--</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">持有天數</span>
+                    <span id="daysDisplay" class="status-value">-- 天</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">安全距離</span>
+                    <span id="riskDisplay" class="status-value">--%</span>
+                </div>
+            </div>
 
-        <!-- 新增：下一步戰術指引 -->
-        <div id="nextStepBox" class="next-step-box">
-            <span class="next-step-title">📋 下一步戰術指引 (Next Steps)</span>
-            <div id="nextStepContent" class="next-step-content"></div>
+            <div id="actionBox" class="action-banner"></div>
+            <div id="logicExplain" class="logic-text"></div>
+
+            <!-- 記錄按鈕 -->
+            <button onclick="saveTradeRecord()" class="btn-record" id="recordBtn" style="display:none;">
+                💾 將此筆交易存入紀錄
+            </button>
         </div>
     </div>
+
+    <!-- HISTORY VIEW -->
+    <div id="view-history" style="display:none;">
+        <div class="card">
+            <div class="stats-summary">
+                <div class="stat-box">
+                    <span class="stat-val" id="totalPnl">$0</span>
+                    <span class="stat-lbl">總獲利</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-val" id="totalTrades">0</span>
+                    <span class="stat-lbl">交易次數</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-val" id="winRate">0%</span>
+                    <span class="stat-lbl">勝率</span>
+                </div>
+            </div>
+
+            <div style="overflow-x:auto;">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>標的</th>
+                            <th>動作</th>
+                            <th>股數</th>
+                            <th>出場價</th>
+                            <th>損益</th>
+                            <th>刪除</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyList">
+                        <!-- JS will populate this -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="margin-top:20px; display:flex; gap:10px;">
+                <button onclick="exportCSV()" style="background:#333;">📥 匯出 Excel (CSV)</button>
+                <button onclick="clearHistory()" style="background:#422;">🗑️ 清空紀錄</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
+    // Init
     document.getElementById('entryDate').valueAsDate = new Date();
+    let currentStrategyResult = null; // Store temp result for saving
+    
+    // Load History on startup
+    refreshHistoryUI();
+
+    function switchTab(tabName) {
+        document.getElementById('view-dashboard').style.display = tabName === 'dashboard' ? 'block' : 'none';
+        document.getElementById('view-history').style.display = tabName === 'history' ? 'block' : 'none';
+        
+        // Toggle Tab Styles
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs[0].classList.toggle('active', tabName === 'dashboard');
+        tabs[1].classList.toggle('active', tabName === 'history');
+        
+        if(tabName === 'history') refreshHistoryUI();
+    }
 
     async function fetchData() {
         const ticker = document.getElementById('tickerSymbol').value.toUpperCase().trim();
         const entryDateVal = document.getElementById('entryDate').value;
-
-        if (!ticker) { alert("請輸入股票代碼"); return; }
-        if (!entryDateVal) { alert("請選擇買進日期"); return; }
-
         const btn = document.getElementById('fetchBtn');
         const msg = document.getElementById('fetchMsg');
-        const entryTs = new Date(entryDateVal).getTime() / 1000;
+        
+        if (!ticker || !entryDateVal) { alert("資料不完整"); return; }
 
         btn.disabled = true;
-        btn.innerHTML = '<div class="loader"></div> 連線中...';
-        msg.innerText = `正在抓取 ${ticker} 數據...`;
+        btn.innerHTML = '<div class="loader"></div> 抓取中...';
+        msg.innerText = `正在抓取 ${ticker}...`;
 
         try {
             const proxyUrl = "https://corsproxy.io/?";
             const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=3mo&interval=1d`;
-            
             const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
-            if (!response.ok) throw new Error("查無此代碼或 API 錯誤");
             
+            if (!response.ok) throw new Error("API Error");
             const data = await response.json();
             const result = data.chart.result[0];
             
             const currentPrice = result.meta.regularMarketPrice;
+            const entryTs = new Date(entryDateVal).getTime() / 1000;
             const timestamps = result.timestamp;
             const highs = result.indicators.quote[0].high;
             let maxHigh = 0;
             
             if (timestamps) {
                 for (let i = 0; i < timestamps.length; i++) {
-                    if (timestamps[i] >= entryTs) {
-                        if (highs[i] > maxHigh) maxHigh = highs[i];
-                    }
+                    if (timestamps[i] >= entryTs && highs[i] > maxHigh) maxHigh = highs[i];
                 }
             }
             if (maxHigh === 0) maxHigh = result.meta.regularMarketDayHigh;
@@ -235,7 +295,7 @@
             document.getElementById('currentPrice').value = currentPrice.toFixed(2);
             document.getElementById('highPrice').value = maxHigh.toFixed(2);
             
-            msg.innerText = `✅ 成功取得 ${ticker} 報價`;
+            msg.innerText = "✅ 報價更新成功";
             msg.style.color = "var(--success)";
             
             if(document.getElementById('costPrice').value && document.getElementById('sharesCount').value) {
@@ -244,11 +304,11 @@
 
         } catch (error) {
             console.error(error);
-            msg.innerText = `❌ 失敗：無法取得資料，請檢查代碼。`;
+            msg.innerText = "❌ 抓取失敗，請手動輸入";
             msg.style.color = "var(--danger)";
         } finally {
             btn.disabled = false;
-            btn.innerText = "📡 自動抓取現價 (Yahoo API)";
+            btn.innerText = "📡 自動抓取現價";
         }
     }
 
@@ -261,7 +321,7 @@
         const current = parseFloat(document.getElementById('currentPrice').value);
 
         if (isNaN(cost) || isNaN(shares) || !entryDateVal || isNaN(high) || isNaN(current)) {
-            alert("請填寫所有欄位"); return;
+            alert("請填寫完整資料"); return;
         }
 
         const entryDate = new Date(entryDateVal);
@@ -272,20 +332,13 @@
         const totalCost = cost * shares;
         const pnlValue = totalValue - totalCost;
         
+        // Strategy Logic
         const stopBreakeven = cost * 1.02;
         const stopTrailing = high * 0.90;
-        
-        let activeStopPrice = 0;
-        let stopReason = "";
+        let activeStopPrice = high > stopBreakeven ? Math.max(stopBreakeven, stopTrailing) : cost * 0.95;
+        let stopReason = high > stopBreakeven ? "移動停利" : "初始停損";
 
-        if (high > stopBreakeven) {
-             activeStopPrice = Math.max(stopBreakeven, stopTrailing);
-             stopReason = (activeStopPrice === stopBreakeven) ? "保本 (Cost+2%)" : "移動停利 (High-10%)";
-        } else {
-            activeStopPrice = cost * 0.95;
-            stopReason = "初始停損 (-5%)";
-        }
-
+        // UI Updates
         document.getElementById('resultCard').style.display = 'block';
         
         const pnlEl = document.getElementById('pnlDisplay');
@@ -293,105 +346,179 @@
         pnlEl.className = "status-value " + (pnlPct >= 0 ? "val-green" : "val-red");
         
         const pnlValEl = document.getElementById('pnlValueDisplay');
-        const sign = pnlValue >= 0 ? "+" : "";
-        pnlValEl.innerText = `${sign}$${Math.round(pnlValue).toLocaleString()}`;
+        pnlValEl.innerText = (pnlValue >= 0 ? "+" : "") + Math.round(pnlValue).toLocaleString();
         pnlValEl.style.color = pnlValue >= 0 ? "var(--success)" : "var(--danger)";
 
         document.getElementById('daysDisplay').innerText = daysHeld + " 天";
         
         const distToStop = (current - activeStopPrice) / current;
-        const riskEl = document.getElementById('riskDisplay');
-        riskEl.innerText = (distToStop * 100).toFixed(2) + "%";
-        riskEl.style.color = distToStop < 0 ? "var(--danger)" : "#aaa";
+        document.getElementById('riskDisplay').innerText = (distToStop * 100).toFixed(2) + "%";
 
         const actionBox = document.getElementById('actionBox');
         const logicText = document.getElementById('logicExplain');
-        const nextStepBox = document.getElementById('nextStepBox');
-        const nextStepContent = document.getElementById('nextStepContent');
+        const recordBtn = document.getElementById('recordBtn');
         
-        let actionClass = "", actionMsg = "", logicMsg = "";
-        let nextStepHTML = "";
+        let actionType = "HOLD"; 
+        let actionMsg = "";
+        let actionClass = "";
+        let logicMsg = "";
+        let sharesToSell = 0;
 
-        // --- Scenario Analysis ---
-
-        // 1. Stop Loss Hit
+        // Logic Determination
         if (current < activeStopPrice) {
+            actionType = "SELL_ALL";
             actionClass = "action-danger";
-            actionMsg = "🚨 觸發出場：全數賣出";
-            logicMsg = `現價 ${current} 跌破 ${stopReason} ${activeStopPrice.toFixed(2)}。`;
-            
-            nextStepHTML = `
-                <ul class="step-list">
-                    <li><strong>冷靜期：</strong>請空手觀望至少 2 個交易日，不要急著買回。</li>
-                    <li><strong>檢討：</strong>若 3 天內又漲回去，代表停損設太緊，下次可考慮放大至 ATR * 2。</li>
-                    <li><strong>替代方案：</strong>若仍看好方向，改買正股 (1倍槓桿) 以降低波動風險。</li>
-                </ul>`;
+            actionMsg = "🚨 觸發停損：全數賣出";
+            logicMsg = `跌破 ${stopReason} ${activeStopPrice.toFixed(2)}`;
+            sharesToSell = shares;
         } 
-        // 2. Time Stop (No Momentum)
         else if (daysHeld >= 3 && pnlPct < 0.03 && pnlPct > -0.05) {
+            actionType = "SELL_ALL";
             actionClass = "action-warning";
             actionMsg = "⚠️ 動能不足：建議離場";
-            logicMsg = "持有 3 天漲幅未達 3%，效率過低。";
-            
-            nextStepHTML = `
-                <ul class="step-list">
-                    <li><strong>換股操作：</strong>資金是有時間成本的，轉移到更強勢的標的。</li>
-                    <li><strong>重新入場條件：</strong>直到股價明確突破「近 3 日最高點」且帶量，才考慮重新買回。</li>
-                </ul>`;
+            logicMsg = "3 天漲幅未達 3%";
+            sharesToSell = shares;
         } 
-        // 3. Max Hold Expiration
         else if (daysHeld >= 10) {
+            actionType = "SELL_ALL";
             actionClass = "action-danger";
             actionMsg = "🛑 期限已到：強制出場";
-            logicMsg = "持有已達 10 天上限，槓桿耗損風險大增。";
-            
-            nextStepHTML = `
-                <ul class="step-list">
-                    <li><strong>轉倉策略：</strong>若仍看多，請將資金轉入正股 (如 TSLA/NVDA)。</li>
-                    <li><strong>優勢：</strong>正股沒有每日重置耗損，適合長期持有吃到完整波段。</li>
-                    <li><strong>休息：</strong>若一定要做槓桿，請休息 1 天再重新計算 10 天週期。</li>
-                </ul>`;
+            logicMsg = "持有已達 10 天";
+            sharesToSell = shares;
         } 
-        // 4. Profit Taking (Scale Out)
         else if (pnlPct >= 0.10) {
-            const sellAmount = Math.floor(shares / 2);
-            const keepAmount = shares - sellAmount;
+            actionType = "SELL_HALF";
+            sharesToSell = Math.floor(shares / 2);
             actionClass = "action-warning";
-            actionMsg = `💰 獲利達標：賣出 ${sellAmount} 股`;
-            logicMsg = `獲利 > 10%，建議鎖住 50% 利潤。`;
-            
-            nextStepHTML = `
-                <ul class="step-list">
-                    <li><strong>剩餘部位 (${keepAmount} 股)：</strong>進入「無風險博魚尾」模式。</li>
-                    <li><strong>新停損單：</strong>請將剩餘部位的停損上移至 <strong>${(cost * 1.05).toFixed(2)}</strong> (確保整筆交易大賺)。</li>
-                    <li><strong>心態：</strong>剩下的部位就讓它飄，不爆賺不出場，因為本金已經拿回來了。</li>
-                </ul>`;
+            actionMsg = `💰 獲利達標：賣出 ${sharesToSell} 股`;
+            logicMsg = "獲利 > 10%，減碼 50%";
         } 
-        // 5. Hold
         else {
+            actionType = "HOLD";
             actionClass = "action-safe";
             actionMsg = "✅ 狀態良好：續抱";
-            logicMsg = `位於安全區間。停損價: ${activeStopPrice.toFixed(2)}`;
-            
-            nextStepHTML = `
-                <ul class="step-list">
-                    <li><strong>每日任務：</strong>收盤前檢查股價是否跌破 5日均線。</li>
-                    <li><strong>加碼禁令：</strong>除非股價突破前高，否則不要在下跌途中加碼攤平。</li>
-                    <li><strong>耐心：</strong>給市場一點時間發酵，目前策略執行中。</li>
-                </ul>`;
+            logicMsg = `安全區間。停損: ${activeStopPrice.toFixed(2)}`;
         }
 
         actionBox.className = "action-banner " + actionClass;
         actionBox.innerText = actionMsg;
         actionBox.style.display = 'block';
-        logicText.innerText = `診斷依據：${logicMsg}`;
+        logicText.innerText = logicMsg;
+
+        // Prepare Data for Recording
+        if (actionType !== "HOLD") {
+            recordBtn.style.display = 'block';
+            // Calculate Realized PnL for the sold portion
+            const realizedPnL = (current - cost) * sharesToSell;
+            
+            currentStrategyResult = {
+                date: new Date().toISOString().split('T')[0],
+                ticker: ticker,
+                action: actionMsg.split('：')[0], // Get simple action name
+                shares: sharesToSell,
+                price: current,
+                pnl: realizedPnL
+            };
+        } else {
+            recordBtn.style.display = 'none';
+        }
+    }
+
+    // --- HISTORY FUNCTIONS ---
+
+    function saveTradeRecord() {
+        if (!currentStrategyResult) return;
         
-        nextStepBox.style.display = 'block';
-        nextStepContent.innerHTML = nextStepHTML;
+        // 1. Get existing history
+        let history = JSON.parse(localStorage.getItem('tsll_trade_history') || "[]");
+        
+        // 2. Add ID
+        currentStrategyResult.id = Date.now();
+        
+        // 3. Push new record
+        history.push(currentStrategyResult);
+        
+        // 4. Save back
+        localStorage.setItem('tsll_trade_history', JSON.stringify(history));
+        
+        alert("✅ 交易已儲存！請至「交易紀錄」分頁查看。");
+        refreshHistoryUI();
+        document.getElementById('recordBtn').style.display = 'none'; // Prevent double save
+    }
+
+    function refreshHistoryUI() {
+        const history = JSON.parse(localStorage.getItem('tsll_trade_history') || "[]");
+        const tbody = document.getElementById('historyList');
+        tbody.innerHTML = "";
+
+        let totalPnl = 0;
+        let wins = 0;
+        let totalTrades = history.length;
+
+        // Sort by date desc
+        history.sort((a, b) => b.id - a.id);
+
+        history.forEach(item => {
+            totalPnl += item.pnl;
+            if (item.pnl > 0) wins++;
+
+            const tr = document.createElement('tr');
+            const pnlClass = item.pnl >= 0 ? "positive" : "negative";
+            const pnlSign = item.pnl >= 0 ? "+" : "";
+            
+            tr.innerHTML = `
+                <td>${item.date}</td>
+                <td>${item.ticker}</td>
+                <td style="font-size:0.8rem;">${item.action}</td>
+                <td>${item.shares}</td>
+                <td>${item.price}</td>
+                <td class="history-pnl ${pnlClass}">${pnlSign}${Math.round(item.pnl)}</td>
+                <td><button class="btn-danger" onclick="deleteRecord(${item.id})">X</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Update Stats
+        document.getElementById('totalPnl').innerText = "$" + Math.round(totalPnl).toLocaleString();
+        document.getElementById('totalPnl').style.color = totalPnl >= 0 ? "var(--success)" : "var(--danger)";
+        document.getElementById('totalTrades').innerText = totalTrades;
+        document.getElementById('winRate').innerText = totalTrades > 0 ? Math.round((wins/totalTrades)*100) + "%" : "0%";
+    }
+
+    function deleteRecord(id) {
+        if(!confirm("確定要刪除這筆紀錄嗎？")) return;
+        let history = JSON.parse(localStorage.getItem('tsll_trade_history') || "[]");
+        history = history.filter(item => item.id !== id);
+        localStorage.setItem('tsll_trade_history', JSON.stringify(history));
+        refreshHistoryUI();
+    }
+
+    function clearHistory() {
+        if(!confirm("⚠️ 警告：確定要清空所有歷史紀錄嗎？此動作無法復原。")) return;
+        localStorage.removeItem('tsll_trade_history');
+        refreshHistoryUI();
+    }
+    
+    function exportCSV() {
+        const history = JSON.parse(localStorage.getItem('tsll_trade_history') || "[]");
+        if (history.length === 0) { alert("沒有紀錄可匯出"); return; }
+        
+        let csvContent = "data:text/csv;charset=utf-8,\ufeff"; // BOM for Excel
+        csvContent += "日期,標的,動作,股數,成交價,損益\n";
+        
+        history.forEach(row => {
+            csvContent += `${row.date},${row.ticker},${row.action},${row.shares},${row.price},${row.pnl}\n`;
+        });
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "trade_history.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 </script>
 
 </body>
 </html>
-
-
