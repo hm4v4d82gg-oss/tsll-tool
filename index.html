@@ -3,20 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>槓桿戰術儀表板 V5.1 (寬停損版)</title>
+    <title>槓桿戰術儀表板 V5.2 (反彈優化版)</title>
     <style>
-        :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-main: #e0e0e0;
-            --text-sub: #a0a0a0;
-            --accent: #2962ff;
-            --success: #00c853;
-            --danger: #ff3d00;
-            --warning: #ffab00;
-            --info: #00b0ff;
-            --border: #333;
-        }
+        :root { --bg-color: #121212; --card-bg: #1e1e1e; --text-main: #e0e0e0; --text-sub: #a0a0a0; --accent: #2962ff; --success: #00c853; --danger: #ff3d00; --warning: #ffab00; --info: #00b0ff; --border: #333; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 20px; line-height: 1.6; }
         .container { max-width: 600px; margin: 0 auto; padding-bottom: 80px; }
         h1 { text-align: center; margin-bottom: 20px; color: var(--text-main); font-size: 1.5rem; }
@@ -56,92 +45,49 @@
 <body>
 
 <div class="container">
-    <h1>📉 戰術儀表板 V5.1 (TSLL 專用)</h1>
+    <h1>📉 戰術儀表板 V5.2 (反彈優化)</h1>
 
     <div class="tab-container">
         <div class="tab-btn active" onclick="switchTab('dashboard')">📈 診斷面板</div>
         <div class="tab-btn" onclick="switchTab('history')">📝 交易紀錄</div>
     </div>
 
-    <!-- DASHBOARD -->
     <div id="view-dashboard">
         <div class="card">
             <div class="input-row">
-                <div class="input-group">
-                    <label>標的代碼</label>
-                    <input type="text" id="tickerSymbol" value="TSLL" style="text-transform:uppercase; font-weight:bold;">
-                </div>
-                <div class="input-group">
-                    <label>買進日期</label>
-                    <input type="date" id="entryDate">
-                </div>
+                <div class="input-group"><label>標的代碼</label><input type="text" id="tickerSymbol" value="TSLL" style="text-transform:uppercase; font-weight:bold;"></div>
+                <div class="input-group"><label>買進日期</label><input type="date" id="entryDate"></div>
             </div>
             <div class="input-row">
-                <div class="input-group">
-                    <label>成本</label>
-                    <input type="number" id="costPrice" placeholder="100.0" step="0.01">
-                </div>
-                <div class="input-group">
-                    <label>股數</label>
-                    <input type="number" id="sharesCount" placeholder="200">
-                </div>
+                <div class="input-group"><label>成本</label><input type="number" id="costPrice" placeholder="100.0" step="0.01"></div>
+                <div class="input-group"><label>股數</label><input type="number" id="sharesCount" placeholder="200"></div>
             </div>
-            
             <button onclick="fetchData()" class="btn-fetch" id="fetchBtn">📡 抓取現價與均線 (MA)</button>
             <div id="fetchMsg" style="font-size:0.8rem; color:#888; margin-bottom:15px; text-align:center;"></div>
-
             <div class="input-row">
-                <div class="input-group">
-                    <label>5日均線 (5MA) <span id="ma5Badge" class="ma-badge" style="display:none;">--</span></label>
-                    <input type="number" id="ma5Price" placeholder="系統自動算" step="0.01" style="color:var(--warning);">
-                </div>
-                <div class="input-group">
-                    <label>20日均線 (20MA) <span id="ma20Badge" class="ma-badge" style="display:none;">--</span></label>
-                    <input type="number" id="ma20Price" placeholder="系統自動算" step="0.01" style="color:var(--info);">
-                </div>
+                <div class="input-group"><label>5日均線 (5MA) <span id="ma5Badge" class="ma-badge" style="display:none;">--</span></label><input type="number" id="ma5Price" placeholder="系統自動算" step="0.01" style="color:var(--warning);"></div>
+                <div class="input-group"><label>20日均線 (20MA) <span id="ma20Badge" class="ma-badge" style="display:none;">--</span></label><input type="number" id="ma20Price" placeholder="系統自動算" step="0.01" style="color:var(--info);"></div>
             </div>
-
             <div class="input-row">
-                <div class="input-group">
-                    <label>區間最高價</label>
-                    <input type="number" id="highPrice" placeholder="自動填入" step="0.01">
-                </div>
-                <div class="input-group">
-                    <label>目前現價</label>
-                    <input type="number" id="currentPrice" placeholder="自動填入" step="0.01" style="font-weight:bold;">
-                </div>
+                <div class="input-group"><label>區間最高價</label><input type="number" id="highPrice" placeholder="自動填入" step="0.01"></div>
+                <div class="input-group"><label>目前現價</label><input type="number" id="currentPrice" placeholder="自動填入" step="0.01" style="font-weight:bold;"></div>
             </div>
-            
             <button onclick="calculateStrategy()" class="btn-calc">執行 MA 策略診斷</button>
         </div>
 
         <div id="resultCard" class="card" style="display:none;">
             <div class="status-grid">
-                <div class="status-item">
-                    <span class="status-label">損益率</span>
-                    <span id="pnlDisplay" class="status-value">--%</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-label">帳面損益</span>
-                    <span id="pnlValueDisplay" class="status-value">--</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-label">持有天數</span>
-                    <span id="daysDisplay" class="status-value">-- 天</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-label">距離停損/停利</span>
-                    <span id="riskDisplay" class="status-value">--%</span>
-                </div>
+                <div class="status-item"><span class="status-label">損益率</span><span id="pnlDisplay" class="status-value">--%</span></div>
+                <div class="status-item"><span class="status-label">帳面損益</span><span id="pnlValueDisplay" class="status-value">--</span></div>
+                <div class="status-item"><span class="status-label">持有天數</span><span id="daysDisplay" class="status-value">-- 天</span></div>
+                <div class="status-item"><span class="status-label">距離停損/停利</span><span id="riskDisplay" class="status-value">--%</span></div>
             </div>
-
             <div id="actionBox" class="action-banner"></div>
             <div id="logicExplain" class="logic-text"></div>
             <button onclick="saveTradeRecord()" class="btn-record" id="recordBtn" style="display:none;">💾 存入紀錄</button>
         </div>
     </div>
 
-    <!-- HISTORY -->
     <div id="view-history" style="display:none;">
         <div class="card">
             <div class="stats-summary">
@@ -182,12 +128,8 @@
         const entryDateVal = document.getElementById('entryDate').value;
         const btn = document.getElementById('fetchBtn');
         const msg = document.getElementById('fetchMsg');
-        
         if (!ticker || !entryDateVal) { alert("資料不完整"); return; }
-
-        btn.disabled = true;
-        btn.innerHTML = '<div class="loader"></div> 計算均線中...';
-        msg.innerText = `正在分析 ${ticker} 技術指標...`;
+        btn.disabled = true; btn.innerHTML = '<div class="loader"></div> 計算均線中...'; msg.innerText = `正在分析 ${ticker}...`;
 
         try {
             const proxyUrl = "https://corsproxy.io/?";
@@ -206,8 +148,7 @@
                 const validPrices = prices.filter(p => p != null);
                 if (validPrices.length < n) return 0;
                 const slice = validPrices.slice(-n);
-                const sum = slice.reduce((a, b) => a + b, 0);
-                return sum / n;
+                return slice.reduce((a, b) => a + b, 0) / n;
             };
 
             const ma5 = getMA(5);
@@ -226,28 +167,14 @@
             document.getElementById('ma5Price').value = ma5.toFixed(2);
             document.getElementById('ma20Price').value = ma20.toFixed(2);
 
-            const ma5Badge = document.getElementById('ma5Badge');
-            ma5Badge.style.display = 'inline-block';
-            ma5Badge.innerText = currentPrice >= ma5 ? "站上" : "跌破";
-            ma5Badge.className = currentPrice >= ma5 ? "ma-badge ma-up" : "ma-badge ma-down";
-
-            const ma20Badge = document.getElementById('ma20Badge');
-            ma20Badge.style.display = 'inline-block';
-            ma20Badge.innerText = currentPrice >= ma20 ? "多頭" : "空頭";
-            ma20Badge.className = currentPrice >= ma20 ? "ma-badge ma-up" : "ma-badge ma-down";
+            const ma5Badge = document.getElementById('ma5Badge'); ma5Badge.style.display = 'inline-block';
+            ma5Badge.innerText = currentPrice >= ma5 ? "站上" : "跌破"; ma5Badge.className = currentPrice >= ma5 ? "ma-badge ma-up" : "ma-badge ma-down";
+            const ma20Badge = document.getElementById('ma20Badge'); ma20Badge.style.display = 'inline-block';
+            ma20Badge.innerText = currentPrice >= ma20 ? "多頭" : "空頭"; ma20Badge.className = currentPrice >= ma20 ? "ma-badge ma-up" : "ma-badge ma-down";
             
-            msg.innerText = "✅ 技術分析完成";
-            msg.style.color = "var(--success)";
+            msg.innerText = "✅ 技術分析完成"; msg.style.color = "var(--success)";
             if(document.getElementById('costPrice').value && document.getElementById('sharesCount').value) calculateStrategy();
-
-        } catch (error) {
-            console.error(error);
-            msg.innerText = "❌ 抓取失敗";
-            msg.style.color = "var(--danger)";
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "📡 抓取現價與均線 (MA)";
-        }
+        } catch (error) { console.error(error); msg.innerText = "❌ 抓取失敗"; msg.style.color = "var(--danger)"; } finally { btn.disabled = false; btn.innerText = "📡 抓取現價與均線 (MA)"; }
     }
 
     function calculateStrategy() {
@@ -267,44 +194,52 @@
         const pnlPct = (current - cost) / cost;
         const pnlValue = (current - cost) * shares;
         
-        // --- V5.1 寬停損邏輯 ---
-        
-        // 1. 硬停損放寬至 12% (因為 2x ETF 波動大)
+        // --- V5.2 邏輯 (反彈優化) ---
         const HARD_STOP_PCT = 0.12; 
-        
-        // 2. 停損線：20MA 依然是絕對防線
-        // 如果沒跌破 20MA，則容忍到 -12%
-        let stopLine = ma20 > 0 ? Math.max(ma20, cost * (1 - HARD_STOP_PCT)) : cost * (1 - HARD_STOP_PCT);
-        let stopLineReason = ma20 > cost * (1 - HARD_STOP_PCT) ? "跌破 20MA" : `觸發硬停損 -${(HARD_STOP_PCT*100)}%`;
 
-        // 3. 停利線
+        // 1. 停損線邏輯 (防守)
+        let stopLine = 0;
+        let stopLineReason = "";
+
+        // 情境 A: 在 20MA 之下 (空頭)
+        if (current < ma20) {
+            if (current > ma5) {
+                // 子情境 A-1: 站上 5MA (反彈進行中) -> 用 5MA 當停損
+                stopLine = ma5;
+                stopLineReason = "跌破 5MA (反彈結束)";
+            } else {
+                // 子情境 A-2: 5MA 之下 (弱勢探底) -> 立即停損 (除非還沒破硬停損?)
+                // 這裡為了嚴格，只要雙破就出場。但為了相容硬停損，我們設為 Current (即立刻賣)
+                stopLine = current + 0.01; // Force sell
+                stopLineReason = "空頭且破 5MA";
+            }
+        } 
+        // 情境 B: 在 20MA 之上 (多頭)
+        else {
+            // 正常回檔防守：20MA 是最後防線
+            stopLine = Math.max(ma20, cost * (1 - HARD_STOP_PCT));
+            stopLineReason = ma20 > cost * (1 - HARD_STOP_PCT) ? "跌破 20MA" : `硬停損 -${(HARD_STOP_PCT*100)}%`;
+        }
+
+        // 2. 停利線邏輯 (進攻)
         let profitLine = 0;
         let profitReason = "";
         if (high > cost * 1.02) {
             const trailingStop = high * 0.90;
-            if (ma5 > 0 && ma5 > trailingStop) {
-                profitLine = ma5;
-                profitReason = "跌破 5MA";
-            } else {
-                profitLine = trailingStop;
-                profitReason = "回檔 10%";
-            }
+            if (ma5 > 0 && ma5 > trailingStop) { profitLine = ma5; profitReason = "跌破 5MA"; } 
+            else { profitLine = trailingStop; profitReason = "回檔 10%"; }
         }
 
+        // 決定參考價
         let activeReferencePrice = high > cost * 1.02 ? profitLine : stopLine;
         let referenceReason = high > cost * 1.02 ? profitReason : stopLineReason;
 
         // UI
         document.getElementById('resultCard').style.display = 'block';
-        const pnlEl = document.getElementById('pnlDisplay');
-        pnlEl.innerText = (pnlPct * 100).toFixed(2) + "%";
-        pnlEl.className = "status-value " + (pnlPct >= 0 ? "val-green" : "val-red");
-        const pnlValEl = document.getElementById('pnlValueDisplay');
-        pnlValEl.innerText = (pnlValue >= 0 ? "+" : "") + Math.round(pnlValue).toLocaleString();
-        pnlValEl.style.color = pnlValue >= 0 ? "var(--success)" : "var(--danger)";
+        const pnlEl = document.getElementById('pnlDisplay'); pnlEl.innerText = (pnlPct * 100).toFixed(2) + "%"; pnlEl.className = "status-value " + (pnlPct >= 0 ? "val-green" : "val-red");
+        const pnlValEl = document.getElementById('pnlValueDisplay'); pnlValEl.innerText = (pnlValue >= 0 ? "+" : "") + Math.round(pnlValue).toLocaleString(); pnlValEl.style.color = pnlValue >= 0 ? "var(--success)" : "var(--danger)";
         document.getElementById('daysDisplay').innerText = daysHeld + " 天";
-        const distToStop = (current - activeReferencePrice) / current;
-        document.getElementById('riskDisplay').innerText = (distToStop * 100).toFixed(2) + "%";
+        const distToStop = (current - activeReferencePrice) / current; document.getElementById('riskDisplay').innerText = (distToStop * 100).toFixed(2) + "%";
 
         const actionBox = document.getElementById('actionBox');
         const logicText = document.getElementById('logicExplain');
@@ -312,28 +247,40 @@
         
         let actionType = "HOLD"; let actionMsg = ""; let actionClass = ""; let logicMsg = ""; let sharesToSell = 0;
 
-        if (current < stopLine) {
+        // Decision Tree
+        
+        // 1. 搶反彈模式 (Under 20MA but Above 5MA)
+        if (current < ma20 && current > ma5) {
+            actionType = "HOLD";
+            actionClass = "action-warning"; // Yellow alert
+            actionMsg = "⚠️ 搶反彈中：續抱 (嚴守 5MA)";
+            logicMsg = `股價位於 20MA (${ma20.toFixed(2)}) 下方但站上 5MA，視為跌深反彈。請緊抱，一旦收盤跌破 5MA (${ma5.toFixed(2)}) 立即快跑。`;
+        }
+        // 2. 停損觸發
+        else if (current < stopLine) {
             actionType = "SELL_ALL";
             actionClass = "action-danger";
             actionMsg = "🚨 觸發停損：全數賣出";
-            logicMsg = `股價 ${current} ${stopLineReason} (${stopLine.toFixed(2)})。`;
+            logicMsg = `觸發條件：${stopLineReason} (${stopLine.toFixed(2)})。`;
             sharesToSell = shares;
         }
+        // 3. 停利觸發
         else if (high > cost * 1.02 && current < profitLine) {
             actionType = "SELL_ALL";
             actionClass = "action-warning";
             actionMsg = "💰 觸發停利：全數獲利";
-            logicMsg = `股價 ${current} ${profitReason} (${profitLine.toFixed(2)})。`;
+            logicMsg = `觸發條件：${profitReason} (${profitLine.toFixed(2)})。`;
             sharesToSell = shares;
         }
-        else if (daysHeld >= 3 && pnlPct < 0.03 && pnlPct > -0.08) { // 放寬動能停損至 -8% 才不視為橫盤
-            // 動能不足：3天漲不到3%
+        // 4. 動能不足
+        else if (daysHeld >= 3 && pnlPct < 0.03 && pnlPct > -0.08) {
             actionType = "SELL_ALL";
             actionClass = "action-warning";
             actionMsg = "⚠️ 動能不足：換股";
-            logicMsg = "3 天漲幅未達 3%，資金效率低。";
+            logicMsg = "3 天漲幅未達 3%。";
             sharesToSell = shares;
         }
+        // 5. 期限已到
         else if (daysHeld >= 10) {
             actionType = "SELL_ALL";
             actionClass = "action-danger";
@@ -341,6 +288,7 @@
             logicMsg = "持有已達 10 天上限。";
             sharesToSell = shares;
         }
+        // 6. 獲利減碼
         else if (pnlPct >= 0.10) {
             actionType = "SELL_HALF";
             sharesToSell = Math.floor(shares / 2);
@@ -348,11 +296,12 @@
             actionMsg = `💰 獲利達標：賣出 ${sharesToSell} 股`;
             logicMsg = "獲利 > 10%！先鎖 50% 利潤。";
         }
+        // 7. 正常多頭續抱
         else {
             actionType = "HOLD";
             actionClass = "action-safe";
-            actionMsg = "✅ 續抱";
-            logicMsg = `防守點：${activeReferencePrice.toFixed(2)} (${referenceReason})`;
+            actionMsg = "✅ 多頭續抱";
+            logicMsg = `股價位於 20MA 之上。防守點：${activeReferencePrice.toFixed(2)} (${referenceReason})`;
         }
 
         actionBox.className = "action-banner " + actionClass;
