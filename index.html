@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>槓桿戰術儀表板 V7.1 (NVDL/TSLL 雙核版)</title>
+    <title>槓桿戰術儀表板 V7.2 (修復版)</title>
     <style>
         :root { --bg-color: #121212; --card-bg: #1e1e1e; --text-main: #e0e0e0; --text-sub: #a0a0a0; --accent: #2962ff; --success: #00c853; --danger: #ff3d00; --warning: #ffab00; --info: #00b0ff; --border: #333; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 20px; line-height: 1.6; }
@@ -14,8 +14,11 @@
         .input-group { margin-bottom: 10px; }
         label { display: block; margin-bottom: 5px; color: var(--text-sub); font-size: 0.85rem; }
         
+        /* Form Elements */
         select, input { width: 100%; padding: 12px; background: #2c2c2c; border: 1px solid #444; border-radius: 8px; color: white; font-size: 1rem; box-sizing: border-box; }
-        select { font-weight: bold; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 15px top 50%; background-size: 12px auto; }
+        select { font-weight: bold; cursor: pointer; appearance: none; -webkit-appearance: none; 
+                 background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); 
+                 background-repeat: no-repeat; background-position: right 15px top 50%; background-size: 12px auto; }
         input:focus, select:focus { border-color: var(--accent); outline: none; }
 
         button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: bold; color: white; transition: opacity 0.2s; margin-top: 5px; }
@@ -27,35 +30,39 @@
         .status-label { font-size: 0.75rem; color: var(--text-sub); display: block; }
         .status-value { font-size: 1.3rem; font-weight: bold; display: block; margin-top: 4px; }
         .val-green { color: var(--success); } .val-red { color: var(--danger); }
+        
         .action-banner { padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 1.2rem; margin-top: 10px; display: none; }
         .action-safe { background: rgba(0, 200, 83, 0.2); color: var(--success); border: 1px solid var(--success); }
         .action-danger { background: rgba(255, 61, 0, 0.2); color: var(--danger); border: 1px solid var(--danger); }
         .action-warning { background: rgba(255, 171, 0, 0.2); color: var(--warning); border: 1px solid var(--warning); }
         .logic-text { margin-top:15px; font-size:0.9rem; color:#aaa; padding: 12px; background: #252525; border-radius: 8px; word-break: break-all; }
+        
         .ma-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; margin-left: 5px; vertical-align: middle; }
-        .ma-up { background: rgba(0, 200, 83, 0.2); color: var(--success); border: 1px solid var(--success); } .ma-down { background: rgba(255, 61, 0, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+        .ma-up { background: rgba(0, 200, 83, 0.2); color: var(--success); border: 1px solid var(--success); } 
+        .ma-down { background: rgba(255, 61, 0, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+        
         .history-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 10px; }
-        .history-table th { text-align: left; color: var(--text-sub); padding: 8px; border-bottom: 1px solid var(--border); } .history-table td { padding: 8px; border-bottom: 1px solid #2a2a2a; color: #ccc; }
+        .history-table th { text-align: left; color: var(--text-sub); padding: 8px; border-bottom: 1px solid var(--border); } 
+        .history-table td { padding: 8px; border-bottom: 1px solid #2a2a2a; color: #ccc; }
         .history-pnl.positive { color: var(--success); } .history-pnl.negative { color: var(--danger); }
+        
         .stats-summary { display: flex; gap: 15px; background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
         .stat-box { flex: 1; text-align: center; } .stat-val { font-size: 1.2rem; font-weight: bold; display: block; } .stat-lbl { font-size: 0.8rem; color: var(--text-sub); }
+        
         .loader { border: 3px solid #333; border-top: 3px solid #fff; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px;}
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
         .tab-container { display: flex; gap: 10px; margin-bottom: 15px; }
         .tab-btn { background: #2c2c2c; padding: 10px; flex: 1; text-align: center; cursor: pointer; border-radius: 8px; color: #888; }
         .tab-btn.active { background: var(--accent); color: white; font-weight: bold; }
-        .chart-wrapper { height: 400px; width: 100%; margin-top: 20px; border-radius: 12px; overflow: hidden; border: 1px solid #333; }
         
-        /* Active Strategy Badge */
-        .strat-badge { font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; margin-left: 10px; }
-        .strat-tsll { background: rgba(200, 0, 0, 0.2); color: #ff5555; border: 1px solid #ff5555; }
-        .strat-nvdl { background: rgba(0, 200, 0, 0.2); color: #55ff55; border: 1px solid #55ff55; }
+        .chart-wrapper { height: 400px; width: 100%; margin-top: 20px; border-radius: 12px; overflow: hidden; border: 1px solid #333; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📉 戰術儀表板 V7.1</h1>
+    <h1>📉 戰術儀表板 V7.2</h1>
 
     <div class="tab-container">
         <div class="tab-btn active" onclick="switchTab('dashboard')">📈 診斷 & 圖表</div>
@@ -68,8 +75,8 @@
         <div class="card">
             <div class="input-row">
                 <div class="input-group">
-                    <label>選擇標的 (自動切換策略)</label>
-                    <select id="tickerSymbol" onchange="onTickerChange()">
+                    <label>選擇標的</label>
+                    <select id="tickerSymbol">
                         <option value="TSLL">🚗 TSLL (寬停損 -12%)</option>
                         <option value="NVDL">🤖 NVDL (緊停損 -8%)</option>
                     </select>
@@ -77,16 +84,25 @@
                 <div class="input-group"><label>買進日期</label><input type="date" id="entryDate"></div>
             </div>
             <div class="input-row">
-                <div class="input-group"><label>成本</label><input type="number" id="costPrice" placeholder="100.0" step="0.01"></div>
-                <div class="input-group"><label>股數</label><input type="number" id="sharesCount" placeholder="200"></div>
+                <div class="input-group"><label>成本 (Cost)</label><input type="number" id="costPrice" placeholder="100.0" step="0.01"></div>
+                <div class="input-group"><label>股數 (Shares)</label><input type="number" id="sharesCount" placeholder="200"></div>
             </div>
+            
             <button onclick="fetchData()" class="btn-fetch" id="fetchBtn">📡 抓取數據並更新</button>
             <div id="fetchMsg" style="font-size:0.8rem; color:#888; margin-bottom:15px; text-align:center;"></div>
 
-            <div class="input-row" style="display:none;"> <!-- Hidden MA fields -->
-                <div class="input-group"><label>5MA</label><input type="number" id="ma5Price"></div>
-                <div class="input-group"><label>20MA</label><input type="number" id="ma20Price"></div>
+            <!-- Hidden MA inputs for calculation -->
+            <div class="input-row" style="display:none;">
+                <input type="number" id="ma5Price">
+                <input type="number" id="ma20Price">
             </div>
+            
+            <!-- Display MA status -->
+             <div class="input-row">
+                <div class="input-group"><label>5日均線 <span id="ma5Badge" class="ma-badge" style="display:none;">--</span></label></div>
+                <div class="input-group"><label>20日均線 <span id="ma20Badge" class="ma-badge" style="display:none;">--</span></label></div>
+            </div>
+
             <div class="input-row">
                 <div class="input-group"><label>區間最高價</label><input type="number" id="highPrice" placeholder="自動填入" step="0.01"></div>
                 <div class="input-group"><label>目前現價</label><input type="number" id="currentPrice" placeholder="自動填入" step="0.01" style="font-weight:bold;"></div>
@@ -108,7 +124,7 @@
             <button onclick="saveTradeRecord()" class="btn-record" id="recordBtn" style="display:none;">💾 存入紀錄</button>
         </div>
 
-        <!-- Chart -->
+        <!-- TradingView Chart -->
         <div class="card" style="padding:0; overflow:hidden;">
             <div id="tv-chart-container" class="chart-wrapper"></div>
         </div>
@@ -139,21 +155,42 @@
 <script>
     document.getElementById('entryDate').valueAsDate = new Date();
     let currentStrategyResult = null; 
+    
+    // --- Initialize ---
+    // Watch for changes on the dropdown
+    const tickerSelect = document.getElementById('tickerSymbol');
+    tickerSelect.addEventListener('change', function() {
+        onTickerChange();
+    });
+
+    // Initial Load
     refreshHistoryUI();
-    loadChart("NASDAQ:TSLL");
+    setTimeout(() => { loadChart("NASDAQ:TSLL"); }, 500); // Small delay to ensure TV loads
 
     function onTickerChange() {
         const symbol = document.getElementById('tickerSymbol').value;
-        loadChart("NASDAQ:" + symbol);
+        console.log("Ticker changed to:", symbol);
+        
+        // Clear data
         document.getElementById('currentPrice').value = "";
+        document.getElementById('highPrice').value = "";
+        document.getElementById('ma5Price').value = "";
+        document.getElementById('ma20Price').value = "";
+        document.getElementById('ma5Badge').style.display = "none";
+        document.getElementById('ma20Badge').style.display = "none";
         document.getElementById('resultCard').style.display = 'none';
+        
+        // Update Chart
+        loadChart("NASDAQ:" + symbol);
     }
 
     function loadChart(symbol) {
-        new TradingView.widget({
-            "autosize": true, "symbol": symbol, "interval": "D", "timezone": "Asia/Taipei", "theme": "dark", "style": "1", "locale": "zh_TW", "toolbar_bg": "#f1f3f6", "enable_publishing": false, "allow_symbol_change": false, "container_id": "tv-chart-container",
-            "studies": [ { id: "MASimple@tv-basicstudies", inputs: { length: 5 } }, { id: "MASimple@tv-basicstudies", inputs: { length: 20 } } ]
-        });
+        if(document.getElementById('tv-chart-container')) {
+            new TradingView.widget({
+                "autosize": true, "symbol": symbol, "interval": "D", "timezone": "Asia/Taipei", "theme": "dark", "style": "1", "locale": "zh_TW", "toolbar_bg": "#f1f3f6", "enable_publishing": false, "allow_symbol_change": false, "container_id": "tv-chart-container",
+                "studies": [ { id: "MASimple@tv-basicstudies", inputs: { length: 5 } }, { id: "MASimple@tv-basicstudies", inputs: { length: 20 } } ]
+            });
+        }
     }
 
     function switchTab(tabName) {
@@ -166,27 +203,38 @@
     }
 
     async function fetchData() {
-        const ticker = document.getElementById('tickerSymbol').value.trim();
+        // Get value from Select element correctly
+        const tickerEl = document.getElementById('tickerSymbol');
+        const ticker = tickerEl.options[tickerEl.selectedIndex].value;
+        
         const entryDateVal = document.getElementById('entryDate').value;
         const btn = document.getElementById('fetchBtn');
         const msg = document.getElementById('fetchMsg');
+        
         if (!entryDateVal) { alert("請選擇買進日期"); return; }
         
-        loadChart("NASDAQ:" + ticker); // Sync Chart
+        // Sync Chart just in case
+        loadChart("NASDAQ:" + ticker);
+
         btn.disabled = true; btn.innerHTML = '<div class="loader"></div> 分析中...'; msg.innerText = `正在分析 ${ticker}...`;
 
         try {
             const proxyUrl = "https://corsproxy.io/?";
             const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=3mo&interval=1d`;
+            
             const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
-            if (!response.ok) throw new Error("API Error");
+            if (!response.ok) throw new Error("API Error: " + response.status);
+            
             const data = await response.json();
+            if(!data.chart || !data.chart.result) throw new Error("Invalid Data");
+            
             const result = data.chart.result[0];
             const prices = result.indicators.quote[0].close;
             const highs = result.indicators.quote[0].high;
             const timestamps = result.timestamp;
             const currentPrice = result.meta.regularMarketPrice;
 
+            // MA Calculation
             const getMA = (n) => {
                 if (prices.length < n) return 0;
                 const validPrices = prices.filter(p => p != null);
@@ -199,6 +247,7 @@
             const ma20 = getMA(20);
             const entryTs = new Date(entryDateVal).getTime() / 1000;
             let maxHigh = 0;
+            
             if (timestamps) {
                 for (let i = 0; i < timestamps.length; i++) {
                     if (timestamps[i] >= entryTs && highs[i] > maxHigh) maxHigh = highs[i];
@@ -206,11 +255,174 @@
             }
             if (maxHigh === 0) maxHigh = result.meta.regularMarketDayHigh;
 
+            // Update UI Inputs
             document.getElementById('currentPrice').value = currentPrice.toFixed(2);
             document.getElementById('highPrice').value = maxHigh.toFixed(2);
             document.getElementById('ma5Price').value = ma5.toFixed(2);
             document.getElementById('ma20Price').value = ma20.toFixed(2);
 
+            // Update Badges
+            const ma5Badge = document.getElementById('ma5Badge');
+            ma5Badge.style.display = "inline-block";
+            ma5Badge.innerText = currentPrice >= ma5 ? `站上 ${ma5.toFixed(2)}` : `跌破 ${ma5.toFixed(2)}`;
+            ma5Badge.className = currentPrice >= ma5 ? "ma-badge ma-up" : "ma-badge ma-down";
+            
+            const ma20Badge = document.getElementById('ma20Badge');
+            ma20Badge.style.display = "inline-block";
+            ma20Badge.innerText = currentPrice >= ma20 ? `多頭 ${ma20.toFixed(2)}` : `空頭 ${ma20.toFixed(2)}`;
+            ma20Badge.className = currentPrice >= ma20 ? "ma-badge ma-up" : "ma-badge ma-down";
+
             msg.innerText = "✅ 更新成功"; msg.style.color = "var(--success)";
-            if(document.getElementById('costPrice').value && document.getElementById('sharesCount').value) calculateStrategy();
-        } catch (error) { console.error(error); msg.innerText = "❌ 抓取失敗"; msg.style.color = "var(--danger)"; } finally { btn.disabled = false; btn.innerText = "📡 抓取數據並更新";
+            
+            // Auto-calc if cost is present
+            if(document.getElementById('costPrice').value && document.getElementById('sharesCount').value) {
+                calculateStrategy();
+            }
+            
+        } catch (error) { 
+            console.error(error); 
+            msg.innerText = "❌ 抓取失敗 (請稍後再試)"; msg.style.color = "var(--danger)"; 
+        } finally { 
+            btn.disabled = false; btn.innerText = "📡 抓取數據並更新"; 
+        }
+    }
+
+    function calculateStrategy() {
+        // Correctly get ticker value
+        const tickerEl = document.getElementById('tickerSymbol');
+        const ticker = tickerEl.options[tickerEl.selectedIndex].value;
+        
+        const cost = parseFloat(document.getElementById('costPrice').value);
+        const shares = parseInt(document.getElementById('sharesCount').value);
+        const entryDateVal = document.getElementById('entryDate').value;
+        const high = parseFloat(document.getElementById('highPrice').value);
+        const current = parseFloat(document.getElementById('currentPrice').value);
+        const ma5 = parseFloat(document.getElementById('ma5Price').value);
+        const ma20 = parseFloat(document.getElementById('ma20Price').value);
+
+        if (isNaN(cost) || isNaN(shares) || isNaN(current)) { alert("請填寫完整資料"); return; }
+
+        const entryDate = new Date(entryDateVal);
+        const today = new Date();
+        const daysHeld = Math.floor((today - entryDate) / (1000 * 3600 * 24)); 
+        const pnlPct = (current - cost) / cost;
+        const pnlValue = (current - cost) * shares;
+        
+        // --- Logic Config ---
+        let HARD_STOP_PCT = 0.12; 
+        let TRAILING_DROP_PCT = 0.10; 
+        
+        if (ticker === "NVDL") {
+            HARD_STOP_PCT = 0.08; 
+            TRAILING_DROP_PCT = 0.07; 
+        }
+
+        // 1. Stop Logic
+        let stopLine = 0; let stopLineReason = "";
+        if (current < ma20) {
+            if (current > ma5) { stopLine = ma5; stopLineReason = "跌破 5MA (反彈結束)"; } 
+            else { stopLine = current + 0.01; stopLineReason = "空頭且破 5MA"; }
+        } else {
+            stopLine = Math.max(ma20, cost * (1 - HARD_STOP_PCT));
+            stopLineReason = ma20 > cost * (1 - HARD_STOP_PCT) ? "跌破 20MA" : `硬停損 -${(HARD_STOP_PCT*100)}%`;
+        }
+
+        // 2. Profit Logic
+        let profitLine = 0; let profitReason = "";
+        if (high > cost * 1.02) {
+            const trailingStop = high * (1 - TRAILING_DROP_PCT);
+            if (ma5 > 0 && ma5 > trailingStop) { profitLine = ma5; profitReason = "跌破 5MA"; } 
+            else { profitLine = trailingStop; profitReason = `回檔 ${(TRAILING_DROP_PCT*100)}%`; }
+        }
+
+        let activeReferencePrice = high > cost * 1.02 ? profitLine : stopLine;
+        let referenceReason = high > cost * 1.02 ? profitReason : stopLineReason;
+
+        // UI Render
+        document.getElementById('resultCard').style.display = 'block';
+        const pnlEl = document.getElementById('pnlDisplay'); pnlEl.innerText = (pnlPct * 100).toFixed(2) + "%"; pnlEl.className = "status-value " + (pnlPct >= 0 ? "val-green" : "val-red");
+        const pnlValEl = document.getElementById('pnlValueDisplay'); pnlValEl.innerText = (pnlValue >= 0 ? "+" : "") + Math.round(pnlValue).toLocaleString(); pnlValEl.style.color = pnlValue >= 0 ? "var(--success)" : "var(--danger)";
+        document.getElementById('daysDisplay').innerText = daysHeld + " 天";
+        const distToStop = (current - activeReferencePrice) / current; document.getElementById('riskDisplay').innerText = (distToStop * 100).toFixed(2) + "%";
+
+        const actionBox = document.getElementById('actionBox');
+        const logicText = document.getElementById('logicExplain');
+        const recordBtn = document.getElementById('recordBtn');
+        
+        let actionType = "HOLD"; let actionMsg = ""; let actionClass = ""; let logicMsg = ""; let sharesToSell = 0;
+
+        // Decision Tree
+        if (current < ma20 && current > ma5) {
+            actionType = "HOLD"; actionClass = "action-warning"; actionMsg = "⚠️ 搶反彈中：續抱 (嚴守 5MA)";
+            logicMsg = `[${ticker}策略] 位於 20MA 下方但站上 5MA，視為反彈。請緊抱，破 5MA 即跑。`;
+        }
+        else if (current < stopLine) {
+            actionType = "SELL_ALL"; actionClass = "action-danger"; actionMsg = "🚨 觸發停損：全數賣出";
+            logicMsg = `觸發條件：${stopLineReason} (${stopLine.toFixed(2)})。`; sharesToSell = shares;
+        }
+        else if (high > cost * 1.02 && current < profitLine) {
+            actionType = "SELL_ALL"; actionClass = "action-warning"; actionMsg = "💰 觸發停利：全數獲利";
+            logicMsg = `觸發條件：${profitReason} (${profitLine.toFixed(2)})。`; sharesToSell = shares;
+        }
+        else if (daysHeld >= 3 && pnlPct < 0.03 && pnlPct > -0.08) {
+            actionType = "SELL_ALL"; actionClass = "action-warning"; actionMsg = "⚠️ 動能不足：換股";
+            logicMsg = "3 天漲幅未達 3%。"; sharesToSell = shares;
+        }
+        else if (daysHeld >= 10) {
+            actionType = "SELL_ALL"; actionClass = "action-danger"; actionMsg = "🛑 期限已到：強制出場";
+            logicMsg = "持有已達 10 天上限。"; sharesToSell = shares;
+        }
+        else if (pnlPct >= 0.10) {
+            actionType = "SELL_HALF"; sharesToSell = Math.floor(shares / 2); actionClass = "action-warning";
+            actionMsg = `💰 獲利達標：賣出 ${sharesToSell} 股`; logicMsg = "獲利 > 10%！先鎖 50% 利潤。";
+        }
+        else {
+            actionType = "HOLD"; actionClass = "action-safe"; actionMsg = "✅ 多頭續抱";
+            logicMsg = `[${ticker}策略] 防守點：${activeReferencePrice.toFixed(2)} (${referenceReason})`;
+        }
+
+        actionBox.className = "action-banner " + actionClass; actionBox.innerText = actionMsg;
+        actionBox.style.display = 'block'; logicText.innerText = logicMsg;
+
+        if (actionType !== "HOLD") {
+            recordBtn.style.display = 'block';
+            const realizedPnL = (current - cost) * sharesToSell;
+            currentStrategyResult = {
+                date: new Date().toISOString().split('T')[0], ticker: ticker,
+                action: actionMsg.split('：')[0], shares: sharesToSell, price: current, pnl: realizedPnL
+            };
+        } else { recordBtn.style.display = 'none'; }
+    }
+
+    function saveTradeRecord() { if (!currentStrategyResult) return; let h = JSON.parse(localStorage.getItem('tsll_trade_history_v7') || "[]"); currentStrategyResult.id = Date.now(); h.push(currentStrategyResult); localStorage.setItem('tsll_trade_history_v7', JSON.stringify(h)); alert("✅ 已存入"); refreshHistoryUI(); document.getElementById('recordBtn').style.display = 'none'; }
+    function refreshHistoryUI() {
+        const history = JSON.parse(localStorage.getItem('tsll_trade_history_v7') || "[]");
+        const tbody = document.getElementById('historyList'); tbody.innerHTML = "";
+        let totalPnl = 0; let wins = 0; let totalTrades = history.length;
+        history.sort((a, b) => b.id - a.id);
+        history.forEach(item => {
+            totalPnl += item.pnl; if (item.pnl > 0) wins++;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${item.date}</td><td>${item.ticker}</td><td style="font-size:0.8rem;">${item.action}</td><td>${item.shares}</td><td>${item.price}</td><td class="history-pnl ${item.pnl >= 0 ? 'positive' : 'negative'}">${Math.round(item.pnl)}</td><td><button class="btn-danger" onclick="deleteRecord(${item.id})">X</button></td>`;
+            tbody.appendChild(tr);
+        });
+        document.getElementById('totalPnl').innerText = "$" + Math.round(totalPnl).toLocaleString();
+        document.getElementById('totalPnl').style.color = totalPnl >= 0 ? "var(--success)" : "var(--danger)";
+        document.getElementById('totalTrades').innerText = totalTrades;
+        document.getElementById('winRate').innerText = totalTrades > 0 ? Math.round((wins/totalTrades)*100) + "%" : "0%";
+    }
+    function deleteRecord(id) { if(confirm("刪除？")) { let h = JSON.parse(localStorage.getItem('tsll_trade_history_v7') || "[]"); h = h.filter(i => i.id !== id); localStorage.setItem('tsll_trade_history_v7', JSON.stringify(h)); refreshHistoryUI(); }}
+    function clearHistory() { if(confirm("清空？")) { localStorage.removeItem('tsll_trade_history_v7'); refreshHistoryUI(); }}
+    function exportCSV() { 
+        const history = JSON.parse(localStorage.getItem('tsll_trade_history_v7') || "[]");
+        if (history.length === 0) { alert("無紀錄"); return; }
+        let csvContent = "data:text/csv;charset=utf-8,\ufeff日期,標的,動作,股數,價位,損益\n";
+        history.forEach(r => { csvContent += `${r.date},${r.ticker},${r.action},${r.shares},${r.price},${r.pnl}\n`; });
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", "trade_history.csv");
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    }
+</script>
+
+</body>
+</html>
