@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>戰術儀表板 V8</title>
+    <title>V8.1</title>
     <style>
         :root { --bg-color: #121212; --card-bg: #1e1e1e; --text-main: #e0e0e0; --text-sub: #a0a0a0; --accent: #2962ff; --success: #00c853; --danger: #ff3d00; --warning: #ffab00; --info: #00b0ff; --border: #333; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 20px; line-height: 1.6; }
         .container { max-width: 800px; margin: 0 auto; padding-bottom: 80px; }
-        h1 { text-align: center; margin-bottom: 20px; color: var(--text-main); font-size: 1.5rem; }
+        
+        /* 極簡標題樣式 */
+        h1 { text-align: center; margin-bottom: 20px; color: var(--text-sub); font-size: 2rem; font-weight: 300; letter-spacing: 2px; opacity: 0.8; }
+        
         .card { background-color: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         .input-group { margin-bottom: 10px; }
@@ -39,9 +42,11 @@
         .history-details { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 0.9rem; color: #ccc; margin-bottom: 10px; }
         .pnl-pos { color: var(--success); } .pnl-neg { color: var(--danger); }
         
-        /* Next Step Box */
-        .next-step { background: #1a2733; padding: 10px; border-radius: 6px; font-size: 0.85rem; margin-top: 10px; border-left: 3px solid var(--info); }
-        .next-step-title { color: var(--info); font-weight: bold; display: block; margin-bottom: 4px; }
+        /* Enhanced Next Step Box */
+        .next-step { background: #1a2733; padding: 12px; border-radius: 6px; font-size: 0.9rem; margin-top: 10px; border-left: 4px solid var(--info); line-height: 1.5; }
+        .next-step-title { color: var(--info); font-weight: bold; display: block; margin-bottom: 6px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+        .next-step ul { margin: 0; padding-left: 20px; }
+        .next-step li { margin-bottom: 4px; color: #d0d0d0; }
         
         .stats-summary { display: flex; gap: 15px; background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
         .stat-box { flex: 1; text-align: center; } .stat-val { font-size: 1.2rem; font-weight: bold; display: block; } .stat-lbl { font-size: 0.8rem; color: var(--text-sub); }
@@ -56,7 +61,7 @@
 <body>
 
 <div class="container">
-    <h1>戰術儀表板 V8</h1>
+    <h1>V8.1</h1>
 
     <div class="tab-container">
         <div class="tab-btn active" onclick="switchTab('dashboard')">📈 診斷 & 圖表</div>
@@ -121,7 +126,6 @@
                 <div class="stat-box"><span class="stat-val" id="winRate">0%</span><span class="stat-lbl">勝率</span></div>
             </div>
             
-            <!-- History List Container -->
             <div id="historyListContainer"></div>
 
             <div style="margin-top:20px; display:flex; gap:10px;">
@@ -214,7 +218,6 @@
             const ma5Badge = document.getElementById('ma5Badge'); ma5Badge.style.display = "inline-block";
             ma5Badge.innerText = currentPrice >= ma5 ? `站上` : `跌破`;
             ma5Badge.className = currentPrice >= ma5 ? "ma-badge ma-up" : "ma-badge ma-down";
-            
             const ma20Badge = document.getElementById('ma20Badge'); ma20Badge.style.display = "inline-block";
             ma20Badge.innerText = currentPrice >= ma20 ? `多頭` : `空頭`;
             ma20Badge.className = currentPrice >= ma20 ? "ma-badge ma-up" : "ma-badge ma-down";
@@ -277,42 +280,65 @@
         const recordBtn = document.getElementById('recordBtn');
         
         let actionType = "HOLD"; let actionMsg = ""; let actionClass = ""; let logicMsg = ""; let sharesToSell = 0;
-        let nextStepMsg = "";
+        let nextStepHTML = "";
 
         if (current < ma20 && current > ma5) {
             actionType = "HOLD"; actionClass = "action-warning"; actionMsg = "⚠️ 搶反彈中：續抱";
-            logicMsg = `[${ticker}] 20MA 下但站上 5MA。請緊抱，破 5MA 即跑。`;
-            nextStepMsg = "持續觀察 5MA，只要一收破，隔日立刻停損。";
+            logicMsg = `[${ticker}] 位於 20MA 下方但站上 5MA，視為反彈。`;
+            nextStepHTML = `<ul>
+                <li><strong>關鍵防守：</strong>請密切關注 5MA (${ma5.toFixed(2)})。</li>
+                <li><strong>操作指引：</strong>只要收盤跌破 5MA，隔日開盤請毫不猶豫市價出清。</li>
+            </ul>`;
         }
         else if (current < stopLine) {
             actionType = "SELL_ALL"; actionClass = "action-danger"; actionMsg = "🚨 觸發停損：全數賣出";
             logicMsg = `觸發：${stopLineReason} (${stopLine.toFixed(2)})。`; sharesToSell = shares;
-            nextStepMsg = "空手觀望至少 2 天。等待股價重新站回 20MA 再考慮進場。";
+            nextStepHTML = `<ul>
+                <li><strong>冷靜期：</strong>空手觀望至少 2-3 個交易日。</li>
+                <li><strong>重新進場：</strong>等待股價重新站回 20MA 且成交量放大後再考慮。</li>
+                <li><strong>檢討：</strong>是否買在空頭趨勢中？(股價 < 20MA 時進場勝率極低)。</li>
+            </ul>`;
         }
         else if (high > cost * 1.02 && current < profitLine) {
             actionType = "SELL_ALL"; actionClass = "action-warning"; actionMsg = "💰 觸發停利：全數獲利";
             logicMsg = `觸發：${profitReason} (${profitLine.toFixed(2)})。`; sharesToSell = shares;
-            nextStepMsg = "獲利已入袋。請等待下一次突破 20MA 或回測不破的機會。";
+            nextStepHTML = `<ul>
+                <li><strong>心態調整：</strong>獲利已入袋，切勿覺得賣飛而立刻追高。</li>
+                <li><strong>觀察重點：</strong>等待股價回測 20MA 不破，或重新突破前高。</li>
+            </ul>`;
         }
         else if (daysHeld >= 3 && pnlPct < 0.03 && pnlPct > -0.08) {
             actionType = "SELL_ALL"; actionClass = "action-warning"; actionMsg = "⚠️ 動能不足：換股";
             logicMsg = "3 天漲幅未達 3%。"; sharesToSell = shares;
-            nextStepMsg = "資金效率低。建議轉移至更強勢的標的。";
+            nextStepHTML = `<ul>
+                <li><strong>資金效率：</strong>此標的短期動能不足，建議轉移資金。</li>
+                <li><strong>篩選：</strong>尋找剛突破 20MA 且帶量的新標的。</li>
+            </ul>`;
         }
         else if (daysHeld >= 10) {
             actionType = "SELL_ALL"; actionClass = "action-danger"; actionMsg = "🛑 期限已到：強制出場";
             logicMsg = "持有已達 10 天上限。"; sharesToSell = shares;
-            nextStepMsg = "休息 1 天以重置槓桿耗損風險。若仍看多，建議改買正股 (NVDA/TSLA)。";
+            nextStepHTML = `<ul>
+                <li><strong>重置風險：</strong>休息 1 天以重置槓桿耗損風險。</li>
+                <li><strong>替代方案：</strong>若仍看多，建議改買正股 (無每日耗損)。</li>
+            </ul>`;
         }
         else if (pnlPct >= 0.10) {
             actionType = "SELL_HALF"; sharesToSell = Math.floor(shares / 2); actionClass = "action-warning";
             actionMsg = `💰 獲利達標：賣出 ${sharesToSell} 股`; logicMsg = "獲利 > 10%！先鎖 50% 利潤。";
-            nextStepMsg = `剩餘 ${shares - sharesToSell} 股進入「無風險模式」。請將停損上移至成本 +5% 或沿 5MA 操作。`;
+            nextStepHTML = `<ul>
+                <li><strong>剩餘部位：</strong>${shares - sharesToSell} 股進入「無風險模式」。</li>
+                <li><strong>新停損：</strong>建議將停損點上移至「買進成本價」。</li>
+                <li><strong>策略：</strong>剩下的部位請沿著 5MA 操作，不破不賣，博取波段大魚尾。</li>
+            </ul>`;
         }
         else {
             actionType = "HOLD"; actionClass = "action-safe"; actionMsg = "✅ 多頭續抱";
             logicMsg = `[${ticker}] 防守點：${activeReferencePrice.toFixed(2)} (${referenceReason})`;
-            nextStepMsg = "趨勢良好，請持續持有並觀察 5MA 支撐。";
+            nextStepHTML = `<ul>
+                <li><strong>每日任務：</strong>收盤確認收在 5MA 之上。</li>
+                <li><strong>加碼禁令：</strong>除非突破前高，否則禁止在下跌途中加碼。</li>
+            </ul>`;
         }
 
         actionBox.className = "action-banner " + actionClass; actionBox.innerText = actionMsg;
@@ -324,7 +350,7 @@
             currentStrategyResult = {
                 date: new Date().toISOString().split('T')[0], ticker: ticker,
                 action: actionMsg.split('：')[0], shares: sharesToSell, price: current, pnl: realizedPnL,
-                nextStep: nextStepMsg // Save next step advice
+                nextStep: nextStepHTML
             };
         } else { recordBtn.style.display = 'none'; }
     }
@@ -360,7 +386,7 @@
                     </div>
                 </div>
                 <div class="next-step">
-                    <span class="next-step-title">💡 下一步戰術：</span>
+                    <span class="next-step-title">💡 下一步戰術指引：</span>
                     ${item.nextStep || "無戰術建議"}
                 </div>
             `;
@@ -377,8 +403,9 @@
     function exportCSV() { 
         const history = JSON.parse(localStorage.getItem('tsll_trade_history_v8') || "[]");
         if (history.length === 0) { alert("無紀錄"); return; }
-        let csvContent = "data:text/csv;charset=utf-8,\ufeff日期,標的,動作,股數,價位,損益,下一步建議\n";
-        history.forEach(r => { csvContent += `${r.date},${r.ticker},${r.action},${r.shares},${r.price},${r.pnl},${r.nextStep}\n`; });
+        // Simple CSV export without HTML tags in nextStep
+        let csvContent = "data:text/csv;charset=utf-8,\ufeff日期,標的,動作,股數,價位,損益\n";
+        history.forEach(r => { csvContent += `${r.date},${r.ticker},${r.action},${r.shares},${r.price},${r.pnl}\n`; });
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", "trade_history.csv");
         document.body.appendChild(link); link.click(); document.body.removeChild(link);
